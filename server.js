@@ -1,6 +1,1 @@
-const express = require('express');
-const app = express();
-
-app.use((req, res) => {
-
-});
+import * as tf from '@tensorflow/tfjs-node';
