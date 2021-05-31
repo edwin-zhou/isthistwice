@@ -2,55 +2,92 @@ const tf = require('@tensorflow/tfjs-node-gpu');
 const path = require('path');
 const fs = require('fs');
 
-var bol = true
+var model = require('./model');
+var xs, ys, ds
 
-var trainSet = [1,3,5,6,87,1,5,8,9]
-var trainLabels = [2,5,7,4,169,2,12,17,20]
+const species = ['Dog', 'Cat']
+const BATCH_SIZE = 32
+const IMG_FORMAT = [350, 350, 3]
+const IMG_SIZE = [350, 350]
 
-var testSet = [5,6,87,1,5,8,9]
-var testLabels = [2,5,7,4,169,2,12]
+xs = tf.data.generator(data)
+ys = tf.data.generator(labels)
+ds = tf.data.zip({xs, ys}).shuffle(BATCH_SIZE).batch(BATCH_SIZE)
 
-var trainDataset
-var testDataset
-
-for (x=0;x<trainSet.length;x++) {
-    trainSet[x] = {xs: x}
-    trainLabels[x] = {ys: x}
-
-}
-
-
-for (y=0;y<testSet.length;y++) {
-    testSet[x] = {xs: x}
-    testLabels[x] = {ys: x}
-}
-
-
-var model = tf.sequential()
-
-model.add(
-    tf.layers.dense({
-        inputDim: 1,
-        activation: 'relu',
-        units: 1
+function* data() {
+    let indexes = []
+    species.forEach((name) => {
+        let pa = path.join(__dirname, 'petimages', name)
+        let filenames = fs.readdirSync(pa)
+        indexes.push(filenames)
     })
-)
 
-model.compile({
-    optimizer: tf.train.adam(),
-    loss: 'categoricalCrossentropy',
-    metrics: ['accuracy'],
-});
+    let dog = getBatches(indexes[0], species.indexOf('Dog'))
+    let cat = getBatches(indexes[1], species.indexOf('Cat'))
 
-model.fitDataset(tf.data.zip([tf.data.array(trainSet), tf.data.array(trainLabels)]), {
-    batchesPerEpoch: 3,
-    validationData: tf.data.zip([tf.data.array(testSet, tf.data.array(testLabels))]),
-    epochs: 10
-})
-.then(history => {
-    console.log(history)
-})
-.catch(err => {
-    console.log(err)
-})
+    for (x=0;x<indexes[0].length;x++) {
+        let dogTensor = dog.next()
+        let catTensor = cat.next()
+
+        if (!dogTensor.done && !catTensor.done) {
+            yield dogTensor.value.concat(catTensor.value), [BATCH_SIZE].concat(IMG_FORMAT)
+        } else {
+            return
+        }
+    }
+}
+
+
+function* getBatches(arr, speciesIndex) {
+    let batch = []
+    for(x=0; x<arr.length; x++) {
+        if (batch.length === BATCH_SIZE/2) {
+            let y =  batch
+            batch = []
+            yield y
+        } else {
+            try {
+                let buff = fs.readFileSync(path.join(__dirname, 'petimages', species[speciesIndex], arr[x]))
+                // tensor = tf.node.decodeImage(buff).resizeBilinear([350, 350])
+                batch.push(toArr(buff))
+            } catch (error) {
+                console.log(error)
+            }
+        } 
+    }
+    return
+}
+
+function* labels() {
+    let arr = new Array(BATCH_SIZE)
+    arr.fill(0, 0, (BATCH_SIZE/2))
+    arr.fill(1, BATCH_SIZE/2)
+    yield tf.oneHot(arr, 2)
+}
+
+function toArr(buff) {
+    let tensor = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
+    tensor.array()
+    .then(a => {
+        tf.dispose(tensor)
+        return a
+    })
+    .catch(err => {
+
+    })
+}
+
+let e = data()
+
+console.log(e.next().value.length)
+
+// model.fitDataset(ds, {
+//     epochs: 10
+// })
+// .then(history => {
+//     console.log(history)
+// })
+// .catch(err => {
+//     console.log(err)
+// })
 

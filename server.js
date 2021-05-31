@@ -1,7 +1,6 @@
 const tf = require('@tensorflow/tfjs-node');
 const path = require('path');
 const fs = require('fs');
-const {promisify} = require('util') 
 const isCorrupted = require('is-corrupted-jpeg')
 const PNG = require('pngjs2').PNG;
 const e = require('express');

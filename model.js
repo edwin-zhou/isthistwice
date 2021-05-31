@@ -7,6 +7,7 @@ var model = tf.sequential()
 model.add(
     tf.layers.conv2d({
         inputShape: [350, 350, 3],
+        batchSize: 32,
         kernelSize: 50,
         filters: 8,
         strides: 1,
