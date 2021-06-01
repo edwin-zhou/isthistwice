@@ -10,46 +10,50 @@ const BATCH_SIZE = 32
 const IMG_FORMAT = [350, 350, 3]
 const IMG_SIZE = [350, 350]
 
+var numCalled = 0
+
+var indexes = []
+species.forEach((name) => {
+    let pa = path.join(__dirname, 'petimages', name)
+    let filenames = fs.readdirSync(pa)
+    indexes.push(filenames)
+})
+var dog = getBatches(indexes[0], species.indexOf('Dog'))
+var cat = getBatches(indexes[1], species.indexOf('Cat'))
+var dogTensor = dog.next()
+var catTensor = cat.next()
+
 xs = tf.data.generator(data)
 ys = tf.data.generator(labels)
-ds = tf.data.zip({xs, ys}).shuffle(BATCH_SIZE).batch(BATCH_SIZE)
+ds = tf.data.zip({xs, ys})
 
 function* data() {
-    let indexes = []
-    species.forEach((name) => {
-        let pa = path.join(__dirname, 'petimages', name)
-        let filenames = fs.readdirSync(pa)
-        indexes.push(filenames)
-    })
-
-    let dog = getBatches(indexes[0], species.indexOf('Dog'))
-    let cat = getBatches(indexes[1], species.indexOf('Cat'))
-
-    for (x=0;x<indexes[0].length;x++) {
-        let dogTensor = dog.next()
-        let catTensor = cat.next()
-
-        if (!dogTensor.done && !catTensor.done) {
-            yield dogTensor.value.concat(catTensor.value), [BATCH_SIZE].concat(IMG_FORMAT)
-        } else {
-            return
-        }
+    while (!dogTensor.done && !catTensor.done) {
+        let d = dogTensor.value
+        let c = catTensor.value
+        dogTensor = dog.next()
+        catTensor = cat.next()
+        yield d.concat(c)
     }
+    return
 }
-
 
 function* getBatches(arr, speciesIndex) {
     let batch = []
     for(x=0; x<arr.length; x++) {
         if (batch.length === BATCH_SIZE/2) {
-            let y =  batch
+            let y = batch
             batch = []
             yield y
         } else {
             try {
-                let buff = fs.readFileSync(path.join(__dirname, 'petimages', species[speciesIndex], arr[x]))
-                // tensor = tf.node.decodeImage(buff).resizeBilinear([350, 350])
-                batch.push(toArr(buff))
+                let filePath = path.join(__dirname, 'petimages', species[speciesIndex], arr[x])
+                if (path.extname(filePath) === '.jpeg' || path.extname(filePath) === '.jpg') {
+                    let buff = fs.readFileSync(filePath)
+                    let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE).arraySync()
+                    batch.push(t)
+                    tf.dispose(t)
+                }
             } catch (error) {
                 console.log(error)
             }
@@ -59,27 +63,20 @@ function* getBatches(arr, speciesIndex) {
 }
 
 function* labels() {
-    let arr = new Array(BATCH_SIZE)
-    arr.fill(0, 0, (BATCH_SIZE/2))
-    arr.fill(1, BATCH_SIZE/2)
-    yield tf.oneHot(arr, 2)
+    while(true) {
+        let arr = new Array(BATCH_SIZE)
+        arr.fill(0, 0, (BATCH_SIZE/2))
+        arr.fill(1, BATCH_SIZE/2)
+        yield tf.oneHot(arr, 2)
+    }
 }
 
-function toArr(buff) {
-    let tensor = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
-    tensor.array()
-    .then(a => {
-        tf.dispose(tensor)
-        return a
-    })
-    .catch(err => {
+ds.take(3).forEachAsync(e => {
+    console.log(e)
+    console.log(tf.memory())
+    tf.disposeVariables()    
+})
 
-    })
-}
-
-let e = data()
-
-console.log(e.next().value.length)
 
 // model.fitDataset(ds, {
 //     epochs: 10
