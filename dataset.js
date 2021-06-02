@@ -6,7 +6,7 @@ var model = require('./model');
 var xs, ys, ds
 
 const species = ['Dog', 'Cat']
-const BATCH_SIZE = 32
+const SAMPLE_SIZE = 32
 const IMG_FORMAT = [350, 350, 3]
 const IMG_SIZE = [350, 350]
 
@@ -29,11 +29,13 @@ ds = tf.data.zip({xs, ys})
 
 function* data() {
     while (!dogTensor.done && !catTensor.done) {
+        numCalled++
+        console.log(numCalled)
         let d = dogTensor.value
         let c = catTensor.value
+        yield d.concat(c) 
         dogTensor = dog.next()
         catTensor = cat.next()
-        yield d.concat(c)
     }
     return
 }
@@ -41,7 +43,8 @@ function* data() {
 function* getBatches(arr, speciesIndex) {
     let batch = []
     for(x=0; x<arr.length; x++) {
-        if (batch.length === BATCH_SIZE/2) {
+        if (batch.length === SAMPLE_SIZE/2) {
+            console.log('alo')
             let y = batch
             batch = []
             yield y
@@ -49,10 +52,11 @@ function* getBatches(arr, speciesIndex) {
             try {
                 let filePath = path.join(__dirname, 'petimages', species[speciesIndex], arr[x])
                 if (path.extname(filePath) === '.jpeg' || path.extname(filePath) === '.jpg') {
-                    let buff = fs.readFileSync(filePath)
-                    let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE).arraySync()
-                    batch.push(t)
-                    tf.dispose(t)
+                    tf.tidy(() => {
+                        let buff = fs.readFileSync(filePath)
+                        let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE).arraySync()
+                        batch.push(t)
+                    })
                 }
             } catch (error) {
                 console.log(error)
@@ -64,27 +68,27 @@ function* getBatches(arr, speciesIndex) {
 
 function* labels() {
     while(true) {
-        let arr = new Array(BATCH_SIZE)
-        arr.fill(0, 0, (BATCH_SIZE/2))
-        arr.fill(1, BATCH_SIZE/2)
+        let arr = new Array(SAMPLE_SIZE)
+        arr.fill(0, 0, (SAMPLE_SIZE/2))
+        arr.fill(1, SAMPLE_SIZE/2)
         yield tf.oneHot(arr, 2)
     }
 }
 
-ds.take(3).forEachAsync(e => {
-    console.log(e)
-    console.log(tf.memory())
-    tf.disposeVariables()    
+ds.forEachAsync(e => {
+    console.log(numCalled)
 })
 
 
 // model.fitDataset(ds, {
-//     epochs: 10
+//     epochs: 10,
 // })
 // .then(history => {
-//     console.log(history)
+//     return history
 // })
 // .catch(err => {
-//     console.log(err)
+//     return err
 // })
+
+module.exports = ds
 

@@ -9,7 +9,7 @@ const shuffle = require('knuth-shuffle-seeded')
 const species = ['Cat', 'Dog']
 
 var model = require('./model.js')
-var dataset = require('./dataset')
+var dataset = require('./dataset.js')
 
 async function train() {
     console.log('begin fit')
@@ -21,13 +21,25 @@ async function train() {
     // const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
 
 
-    model.fitDataset(ds, {
-        epochs: 10
+    model.fitDataset(dataset, {
+        epochs: 10,
     })
     .then(history => {
-        console.log(history)
+        return history
     })
     .catch(err => {
-        console.log(err)
+        return err
     })
 }
+
+// train()
+// .then(his => {
+//     console.log(his)
+// })
+// .catch(err => {
+//     console.log(err)
+// })
+
+dataset.take(2).forEachAsync(e => {
+    console.log(e)
+})
