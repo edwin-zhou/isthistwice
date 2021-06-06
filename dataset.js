@@ -23,19 +23,19 @@ species.forEach((name) => {
     let filenames = fs.readdirSync(pa)
     indexes.push(filenames.slice(0, filenames.length-1-SAMPLE_SIZE))
 
-    for (let x=0;vxs.length < SAMPLE_SIZE ;x++) {
-        try {
-            let filePath = path.join(__dirname, 'petimages', name, filenames[filenames.length-1-x])
-                let buff = fs.readFileSync(filePath)
-                let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
-                if (t.shape.toString() === IMG_SIZE.concat([3]).toString()) {
-                    vxs.push(t)
-                    vys.push(tf.oneHot(species.indexOf(name), 2))
-                }
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    // for (let x=0;vxs.length < SAMPLE_SIZE ;x++) {
+    //     try {
+    //         let filePath = path.join(__dirname, 'petimages', name, filenames[filenames.length-1-x])
+    //             let buff = fs.readFileSync(filePath)
+    //             let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
+    //             if (t.shape.toString() === IMG_SIZE.concat([3]).toString()) {
+    //                 vxs.push(t)
+    //                 vys.push(tf.oneHot(species.indexOf(name), 2))
+    //             }
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // }
 })
 
 var dog = getBatches(indexes[0], species.indexOf('Dog'))
@@ -80,8 +80,23 @@ function* getBatches(arr, speciesIndex) {
                         let buff = fs.readFileSync(filePath)
                         let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
                         if (t.shape.toString() === IMG_SIZE.concat([3]).toString()) {
-                            bool = true
                             ta = t.arraySync()
+
+                            let m = tf.moments(t)
+
+                            let mean = m.mean.dataSync()[0]
+                            let stdev = Math.max(tf.sqrt(m.variance).dataSync()[0], 1/Math.sqrt(IMG_SIZE[0]*IMG_SIZE[1]*3)) 
+
+                            for (let x=0;x<IMG_SIZE[0];x++) {
+                                for (let y=0;y<IMG_SIZE[1];y++) {
+                                    for (let z=0;z<3;z++) {
+                                        let v = ta[x][y][z]
+                                        ta[x][y][z] = (v - mean) / stdev
+                                    }
+                                }
+                            }
+
+                            bool = true
                         } else {
                             bool = false
                         }
@@ -111,6 +126,9 @@ function* labels() {
     }
 }
 
+ds.take(1).forEachAsync(e => {
+})
+
 // ds.take(1).forEachAsync(e => {
 //     let y = e.ys.arraySync()
 //     let a = e.xs.arraySync()
@@ -128,23 +146,24 @@ function* labels() {
 // })
 
 
-model.fitDataset(ds, {
-    epochs: 1,
-    validationData: [vxs, vys]
-})
-.then(history => {
-    model.save('file://./models/model1')
-    .then(res => {
-        console.log(res)
-        console.log(history.history)
-    })
-    .catch(err => {
-            console.log(err)
-     })
-})
-.catch(err => {
-    console.log(err)
-})
+// model.fitDataset(ds, {
+//     epochs: 3,
+//     batchesPerEpoch: 3,
+//     validationData: [vxs, vys]
+// })
+// .then(history => {
+//     model.save('file://./models/model1')
+//     .then(res => {
+//         console.log(res)
+//         console.log(history.history)
+//     })
+//     .catch(err => {
+//             console.log(err)
+//      })
+// })
+// .catch(err => {
+//     console.log(err)
+// })
 
 module.exports = {ds, SAMPLE_SIZE}
 

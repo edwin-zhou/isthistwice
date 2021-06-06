@@ -3,7 +3,7 @@ const tf = require('@tensorflow/tfjs-node');
 const species = ['Cat', 'Dog']
 
 var model = tf.sequential()
-const SAMPLE_SIZE = 32
+const SAMPLE_SIZE = 1
 const IMG_SIZE = [250, 250]
 
 model.add(
