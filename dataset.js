@@ -6,35 +6,47 @@ var model = require('./model').model
 var SAMPLE_SIZE = require('./model').SAMPLE_SIZE
 const e = require('express');
 var xs, ys, ds
-
+var vxs = []
+var vys = []
 const species = ['Dog', 'Cat']
 const IMG_SIZE = require('./model').IMG_SIZE
 
 var numCalled = 0
 
+xs = tf.data.generator(data)
+ys = tf.data.generator(labels)
+ds = tf.data.zip({xs, ys}).shuffle(SAMPLE_SIZE).batch(SAMPLE_SIZE)
+
 var indexes = []
 species.forEach((name) => {
     let pa = path.join(__dirname, 'petimages', name)
     let filenames = fs.readdirSync(pa)
-    indexes.push(filenames.slice(0, 200))
+    indexes.push(filenames.slice(0, filenames.length-1-SAMPLE_SIZE))
+
+    for (let x=0;vxs.length < SAMPLE_SIZE ;x++) {
+        try {
+            let filePath = path.join(__dirname, 'petimages', name, filenames[filenames.length-1-x])
+                let buff = fs.readFileSync(filePath)
+                let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
+                if (t.shape.toString() === IMG_SIZE.concat([3]).toString()) {
+                    vxs.push(t)
+                    vys.push(tf.oneHot(species.indexOf(name), 2))
+                }
+        } catch (error) {
+            console.log(error)
+        }
+    }
 })
-indexes.forEach(e => {
-    console.log(e.length)
-})
+
 var dog = getBatches(indexes[0], species.indexOf('Dog'))
 var cat = getBatches(indexes[1], species.indexOf('Cat'))
 
-xs = tf.data.generator(data)
-ys = tf.data.generator(labels)
-ds = tf.data.zip({xs, ys}).shuffle(SAMPLE_SIZE).batch(SAMPLE_SIZE)
 
 function* data() {
     let index = true
     let dogTensor = dog.next()
     let catTensor = cat.next()
     while (!dogTensor.done && !catTensor.done) {
-        numCalled++
-        console.log(numCalled)
         let d = dogTensor.value
         let c = catTensor.value
         if (index) {
@@ -118,6 +130,7 @@ function* labels() {
 
 model.fitDataset(ds, {
     epochs: 1,
+    validationData: [vxs, vys]
 })
 .then(history => {
     model.save('file://./models/model1')
