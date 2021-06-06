@@ -18,11 +18,6 @@
   "homepage": "https://github.com/ed99win/bhaytf#readme",
   "dependencies": {
     "@tensorflow/tfjs-node": "^3.6.1",
-    "@tensorflow/tfjs-node-gpu": "^3.6.1",
-    "express": "^4.17.1",
-    "is-corrupted-jpeg": "^1.0.2",
-    "knuth-shuffle-seeded": "^1.0.6",
-    "png-validator": "^1.0.0",
-    "pngjs2": "^2.0.0"
+    "express": "^4.17.1"
   }
 }

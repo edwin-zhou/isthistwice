@@ -1,10 +1,7 @@
 const tf = require('@tensorflow/tfjs-node');
 const path = require('path');
 const fs = require('fs');
-const isCorrupted = require('is-corrupted-jpeg')
-const PNG = require('pngjs2').PNG;
 const e = require('express');
-const shuffle = require('knuth-shuffle-seeded')
 
 const species = ['Cat', 'Dog']
 
