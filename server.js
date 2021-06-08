@@ -3,40 +3,32 @@ const path = require('path');
 const fs = require('fs');
 const e = require('express');
 
-const species = ['Cat', 'Dog']
+const IMG_SIZE = require('./model').IMG_SIZE
+var model
+var dataset = require('./dataset.js');
 
-var model = require('./model.js')
-var dataset = require('./dataset.js')
+tf.loadLayersModel('file://./models/model1/model.json')
+.then(mod => {
+    model = mod
+    let pred = model.predict(loadImage('Cat', '0.jpg'), {batchSize: 1})
+    pred.print()    
+})
+.catch(err => {
+    console.log(err)
+})
 
-async function train() {
-    console.log('begin fit')
+function loadImage(dir, filename) {
+    let pa = path.join(__dirname, 'petimages', dir,  filename)
 
-    // const metrics = ['loss', 'val_loss', 'acc', 'val_acc'];
-    // const container = {
-    //   name: 'Model Training', tab: 'Model', styles: { height: '1000px' }
-    // };
-    // const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
+    let buff = fs.readFileSync(pa)
 
-
-    model.fitDataset(dataset, {
-        epochs: 10,
-    })
-    .then(history => {
-        return history
-    })
-    .catch(err => {
-        return err
-    })
+    try {
+        let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
+        t = dataset.normalize(t)
+        return tf.tensor4d([t], [1,200,200,3])
+    } catch (error) {
+        console.log(error)        
+    }
 }
 
-// train()
-// .then(his => {
-//     console.log(his)
-// })
-// .catch(err => {
-//     console.log(err)
-// })
 
-dataset.take(2).forEachAsync(e => {
-    console.log(e)
-})

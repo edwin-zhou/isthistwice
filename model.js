@@ -3,15 +3,14 @@ const tf = require('@tensorflow/tfjs-node');
 const species = ['Cat', 'Dog']
 
 var model = tf.sequential()
-const SAMPLE_SIZE = 1
-const IMG_SIZE = [250, 250]
+const BATCH_SIZE = 10
+const IMG_SIZE = [200, 200]
 
 model.add(
     tf.layers.conv2d({
         inputShape: IMG_SIZE.concat([3]),
-        batchSize: SAMPLE_SIZE,
         kernelSize: 25,
-        filters: 32,
+        filters: 16,
         activation: 'relu',
     })
 )
@@ -21,7 +20,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(
     tf.layers.conv2d({
         kernelSize: 25,
-        filters: 64,
+        filters: 16,
         activation: 'relu',
     })
 )
@@ -31,7 +30,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(tf.layers.flatten());
 
 model.add(tf.layers.dense({
-    units: 128,
+    units: 64,
     activation: 'relu'
 }));
 
@@ -41,9 +40,9 @@ model.add(tf.layers.dense({
 }));
 
 model.compile({
-    optimizer: tf.train.adam(),
+    optimizer: tf.train.adam(0.0001),
     loss: 'binaryCrossentropy',
     metrics: ['accuracy'],
 });
 
-module.exports = {model, SAMPLE_SIZE, IMG_SIZE}
+module.exports = {model, BATCH_SIZE, IMG_SIZE}
