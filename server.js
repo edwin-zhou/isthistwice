@@ -10,7 +10,7 @@ var dataset = require('./dataset.js');
 tf.loadLayersModel('file://./models/model1/model.json')
 .then(mod => {
     model = mod
-    let pred = model.predict(loadImage('Cat', '0.jpg'), {batchSize: 1})
+    let pred = model.predict(loadImage('Cat', '7201.jpg'), {batchSize: 1})
     pred.print()    
 })
 .catch(err => {

@@ -22,7 +22,7 @@ species.forEach((name, i) => {
     let pa = path.join(__dirname, 'petimages', name)
     let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg'})
     pointers.push(getSample(i))
-    files.push(filenames.slice(0, 5))
+    files.push(filenames.slice(0, 100))
 })
 
 let numCalled = 0
@@ -125,7 +125,7 @@ function shuffle(arr) {
 
 // model.fitDataset(ds, {
 //     epochs: 15,
-//     batchesPerEpoch: 1,
+//     batchesPerEpoch: 20,
 // })
 // .then(history => {
 //     model.save('file://./models/model1')
