@@ -3,7 +3,7 @@ const tf = require('@tensorflow/tfjs-node');
 const species = ['Cat', 'Dog']
 
 var model = tf.sequential()
-const BATCH_SIZE = 10
+const BATCH_SIZE = 50
 const IMG_SIZE = [200, 200]
 
 model.add(
@@ -40,7 +40,7 @@ model.add(tf.layers.dense({
 }));
 
 model.compile({
-    optimizer: tf.train.adam(0.0001),
+    optimizer: tf.train.adam(0.00001),
     loss: 'binaryCrossentropy',
     metrics: ['accuracy'],
 });

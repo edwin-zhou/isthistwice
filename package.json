@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/ed99win/bhaytf#readme",
   "dependencies": {
-    "@tensorflow/tfjs-node": "^3.6.1",
+    "@tensorflow/tfjs-node": "^3.7.0",
     "express": "^4.17.1"
   }
 }

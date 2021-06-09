@@ -10,6 +10,7 @@ const IMG_SIZE = require('./model').IMG_SIZE
 const species = ['Dog', 'Cat']
 var pointers = []
 var xs, ys, ds
+var validationSize = 100
 var vxs = []
 var vys = []
 
@@ -21,34 +22,57 @@ var files = []
 species.forEach((name, i) => {
     let pa = path.join(__dirname, 'petimages', name)
     let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg'})
-    pointers.push(getSample(i))
-    files.push(filenames.slice(0, 100))
+    files.push(filenames.slice(0, 10000))
+    pointers.push(getSample(files[i],i))
+
+    let count = 0
+    let s = getSample(filenames, i)
+    for (let x=0;count<validationSize/2;x++) {
+        let e = s.next()
+        vxs.push(tf.tensor3d(e.value))
+        vys.push(tf.oneHot(i, species.length))
+        count++
+    }
 })
 
-let numCalled = 0
+var validX = tf.data.array(vxs)
+var validY = tf.data.array(vys)
+var validData = tf.data.zip({xs: validX, ys: validY}).batch(BATCH_SIZE)
+
 var curIndex = 0
 function* data() {
+    let numCalled = 0
+    let shuffles = 0
     while (true) {
+        // console.log('shuffles: ' + shuffles)
+        // console.log(numCalled)
+        // console.log()
+
         for (let x=0;x<files.length;x++) {
             let s = pointers[x].next()
             if (!s.done) {
+                if (s.value == null) {
+                    console.log('wtffffffffffff')
+                }
                 curIndex = x
+                // numCalled++
                 yield tf.tensor3d(s.value)
             } else {
                 files.forEach((e, i) => {
                     shuffle(e)
-                    pointers[i] = getSample(i)
+                    pointers[i] = getSample(e, i)
                 })
+                shuffles++
                 break
             }
         }
     }
 }
 
-function* getSample(speciesIndex) {
-    for(let x=0; x<files[speciesIndex].length; x++) {
+function* getSample(arr, speciesIndex) {
+    for(let x=0; x<arr.length; x++) {
         try {
-            let filePath = path.join(__dirname, 'petimages', species[speciesIndex], files[speciesIndex][x])
+            let filePath = path.join(__dirname, 'petimages', species[speciesIndex], arr[x])
             if (path.extname(filePath) === '.jpeg' || path.extname(filePath) === '.jpg') {
                 let s = tf.tidy(() => {
                     let buff = fs.readFileSync(filePath)
@@ -59,7 +83,9 @@ function* getSample(speciesIndex) {
                         return
                     }
                 })
-                yield s
+                if (s) {
+                    yield s
+                }
             }
         } catch (error) {
             console.log(error)
@@ -120,26 +146,38 @@ function shuffle(arr) {
 //     e.ys.print()
 // })
 
+// xs.forEachAsync(e => {
+//     // if (typeof(e) != tf.Tensor) {
+//     //     console.log(e)
+//     //     tf.dispose(e)
+//     // } else{
+//     //     console.log(e)
+//     //     setTimeout(() => {}, 2000)
+//     // }
+// })
 
 // model.summary()
 
-// model.fitDataset(ds, {
-//     epochs: 15,
-//     batchesPerEpoch: 20,
-// })
-// .then(history => {
-//     model.save('file://./models/model1')
-//     .then(res => {
-//         console.log(res)
-//         console.log(history.history)
-//     })
-//     .catch(err => {
-//             console.log(err)
-//      })
-// })
-// .catch(err => {
-//     console.log(err)
-// })
+model.fitDataset(ds, {
+    epochs: 15,
+    batchesPerEpoch: 400,
+    validationData: validData,
+    validationBatches: 2,
+    callbacks: tf.callbacks.earlyStopping()
+})
+.then(history => {
+    model.save('file://./models/model1')
+    .then(res => {
+        console.log(res)
+        console.log(history.history)
+    })
+    .catch(err => {
+            console.log(err)
+     })
+})
+.catch(err => {
+    console.log(err)
+})
 
 module.exports = {ds, SAMPLE_SIZE: BATCH_SIZE , normalize}
 
