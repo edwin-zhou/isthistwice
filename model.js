@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node');
+const tf = require('@tensorflow/tfjs-node-gpu');
 
 const species = ['Cat', 'Dog']
 
@@ -20,7 +20,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(
     tf.layers.conv2d({
         kernelSize: 25,
-        filters: 16,
+        filters: 32,
         activation: 'relu',
     })
 )
@@ -30,7 +30,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(tf.layers.flatten());
 
 model.add(tf.layers.dense({
-    units: 64,
+    units: 128,
     activation: 'relu'
 }));
 

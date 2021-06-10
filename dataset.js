@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node');
+const tf = require('@tensorflow/tfjs-node-gpu');
 const path = require('path');
 const fs = require('fs');
 const e = require('express');
@@ -88,7 +88,7 @@ function* getSample(arr, speciesIndex) {
                 }
             }
         } catch (error) {
-            console.log(error)
+            // console.log(error)
         }
     }
     return
