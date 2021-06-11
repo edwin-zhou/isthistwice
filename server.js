@@ -1,21 +1,32 @@
 const tf = require('@tensorflow/tfjs-node-gpu');
 const path = require('path');
 const fs = require('fs');
-const e = require('express');
+const express = require('express');
+const app = express()
 
 const IMG_SIZE = require('./model').IMG_SIZE
 var model
 var dataset = require('./dataset.js');
+const { env } = require('process');
 
-tf.loadLayersModel('file://./models/model1/model.json')
-.then(mod => {
-    model = mod
-    let pred = model.predict(loadImage('Cat', '501.jpg'), {batchSize: 1})
-    pred.print()    
+app.use((req,res,next) => {
+    console.log(`${req.method} for ${req.url}`)
+    next()
 })
-.catch(err => {
-    console.log(err)
+
+app.use((req,res,next) => {
+    express.static(path.join(__dirname, 'models'))
 })
+
+// tf.loadLayersModel('file://./models/model1/model.json')
+// .then(mod => {
+//     model = mod
+//     let pred = model.predict(loadImage('Cat', '501.jpg'), {batchSize: 1})
+//     pred.print()    
+// })
+// .catch(err => {
+//     console.log(err)
+// })
 
 function loadImage(dir, filename) {
     let pa = path.join(__dirname, 'petimages', dir,  filename)
@@ -31,4 +42,6 @@ function loadImage(dir, filename) {
     }
 }
 
-
+app.listen(process.env.PORT, () => {
+    console.log(`running on port ${process.env.PORT}`)
+})

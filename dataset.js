@@ -37,7 +37,7 @@ species.forEach((name, i) => {
 
 var validX = tf.data.array(vxs)
 var validY = tf.data.array(vys)
-var validData = tf.data.zip({xs: validX, ys: validY}).batch(BATCH_SIZE)
+var validData = tf.data.zip({xs: validX, ys: validY}).batch(BATCH_SIZE).shuffle(BATCH_SIZE)
 
 var curIndex = 0
 function* data() {
@@ -156,28 +156,27 @@ function shuffle(arr) {
 //     // }
 // })
 
-// model.summary()
 
-model.fitDataset(ds, {
-    epochs: 15,
-    batchesPerEpoch: 400,
-    validationData: validData,
-    validationBatches: 2,
-    callbacks: tf.callbacks.earlyStopping()
-})
-.then(history => {
-    model.save('file://./models/model1')
-    .then(res => {
-        console.log(res)
-        console.log(history.history)
-    })
-    .catch(err => {
-            console.log(err)
-     })
-})
-.catch(err => {
-    console.log(err)
-})
+// model.fitDataset(ds, {
+//     epochs: 15,
+//     batchesPerEpoch: 400,
+//     validationData: validData,
+//     validationBatches: 2,
+//     callbacks: tf.callbacks.earlyStopping()
+// })
+// .then(history => {
+//     model.save('file://./models/model1')
+//     .then(res => {
+//         console.log(res)
+//         console.log(history.history)
+//     })
+//     .catch(err => {
+//             console.log(err)
+//      })
+// })
+// .catch(err => {
+//     console.log(err)
+// })
 
 module.exports = {ds, SAMPLE_SIZE: BATCH_SIZE , normalize}
 

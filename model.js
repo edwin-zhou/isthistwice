@@ -4,7 +4,7 @@ const species = ['Cat', 'Dog']
 
 var model = tf.sequential()
 const BATCH_SIZE = 50
-const IMG_SIZE = [200, 200]
+const IMG_SIZE = [227, 227]
 
 model.add(
     tf.layers.conv2d({
@@ -19,7 +19,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 25,
+        kernelSize: 7,
         filters: 32,
         activation: 'relu',
     })
