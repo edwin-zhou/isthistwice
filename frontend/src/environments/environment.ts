@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
 
-  modelURL: "localhost:4200/models/model1"
+  modelURL: "http://localhost:3000/models/model1/model.json"
 };
 
 /*

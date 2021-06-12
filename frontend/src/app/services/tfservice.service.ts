@@ -1,6 +1,8 @@
 import { environment } from 'src/environments/environment';
 import { Injectable } from '@angular/core';
 import * as tf from '@tensorflow/tfjs'
+import { Tensor3D } from '@tensorflow/tfjs';
+import { throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +30,10 @@ export class TfserviceService {
     })
   }
 
+  bufftoarr(tensor: Tensor3D) {
+    return tf.browser.toPixels(tensor)
+  }
+
   /** makes prediction over 1 image */
   predict(tensor: tf.Tensor3D): string {
     let t: tf.Tensor3D[] = [tensor]
@@ -35,7 +41,7 @@ export class TfserviceService {
     return pred.toString()
   }
 
-  loadImage(img: any): tf.Tensor3D {
+  loadImage(img: ImageData): tf.Tensor3D {
     return tf.browser.fromPixels(img)
   }
 }

@@ -3,11 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const app = express()
+const PORT = process.env.PORT || 3000
 
 const IMG_SIZE = require('./model').IMG_SIZE
 var model
 var dataset = require('./dataset.js');
-const { env } = require('process');
 
 app.use((req,res,next) => {
     console.log(`${req.method} for ${req.url}`)
@@ -15,7 +15,7 @@ app.use((req,res,next) => {
 })
 
 app.use((req,res,next) => {
-    express.static(path.join(__dirname, 'models'))
+    express.static(path.join(__dirname, 'models', 'model1'))
 })
 
 // tf.loadLayersModel('file://./models/model1/model.json')
@@ -42,6 +42,6 @@ function loadImage(dir, filename) {
     }
 }
 
-app.listen(process.env.PORT, () => {
-    console.log(`running on port ${process.env.PORT}`)
+app.listen(PORT, () => {
+    console.log(`running on port ${PORT}`)
 })

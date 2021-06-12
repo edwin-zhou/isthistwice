@@ -3,12 +3,20 @@
 </mat-toolbar>
 
 <mat-grid-list cols="4" rowHeight="200px">
-  <form>
+  <form [formGroup]="form" (ngSubmit)='onSubmit()'>
     <mat-grid-tile
       colspan='3'
       rowspan='3'
       style="background: rgb(203, 250, 203)">
-      <input type="file" (change)='onFileChange($event)'>
+      <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
+      <div *ngIf='picBuff'>
+        <img  [src]="picBuff" style="max-width: 100%; max-height: 100%;" >
+        <span>
+          <button mat-fab mat-ripple style="z-index: 3; display: block; margin: 0 auto;"  type="button" (click)='deletePic()'>
+            <mat-icon>close</mat-icon>
+          </button>
+        </span>
+      </div>
     </mat-grid-tile>
 
     <mat-grid-tile
