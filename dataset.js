@@ -4,13 +4,14 @@ const fs = require('fs');
 const e = require('express');
 
 var model = require('./model').model
+var congif = require('./settings')
 var BATCH_SIZE = require('./model').BATCH_SIZE
 const IMG_SIZE = require('./model').IMG_SIZE
 
-const species = ['Dog', 'Cat']
+const species = congif.SPECIES
 var pointers = []
 var xs, ys, ds
-var validationSize = 100
+var validationSize = congif.VALIDATION_SIZE
 var vxs = []
 var vys = []
 

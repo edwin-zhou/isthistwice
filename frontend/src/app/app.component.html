@@ -1,4 +1,4 @@
-<mat-toolbar style="top: 0; position: sticky; z-index: 1000;" color='accent'>
+<mat-toolbar style="top: 0; position: sticky; z-index: 1000;" color='accent' [class.mat-elevation-z5]='true'>
   <span>My Application</span>
 </mat-toolbar>
 
@@ -8,14 +8,16 @@
       colspan='3'
       rowspan='3'
       style="background: rgb(203, 250, 203)">
-      <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
+
+      <div *ngIf='!picBuff' class="dropzone"> 
+        <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
+      </div>
+
       <div *ngIf='picBuff'>
-        <img  [src]="picBuff" style="max-width: 100%; max-height: 100%;" >
-        <span>
-          <button mat-fab mat-ripple style="z-index: 3; display: block; margin: 0 auto;"  type="button" (click)='deletePic()'>
-            <mat-icon>close</mat-icon>
-          </button>
-        </span>
+        <img id='subject'  [src]="picBuff" style="max-width: 100%; max-height: 100%;" class="upload">
+        <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
     </mat-grid-tile>
 
@@ -23,7 +25,14 @@
       colspan='1'
       rowspan='3'
       style="background: lightblue">
-      ok
+      <div *ngIf='prediction != ""'>
+        <h2>  
+          This is a {{prediction}}!
+        </h2>
+        <h3>
+          {{certainty | percent}}
+        </h3>
+      </div>
     </mat-grid-tile>
     
     <mat-grid-tile

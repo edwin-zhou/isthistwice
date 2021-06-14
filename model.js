@@ -1,10 +1,11 @@
 const tf = require('@tensorflow/tfjs-node-gpu');
+var config = require('./settings')
 
-const species = ['Cat', 'Dog']
+const species = config.SPECIES
 
 var model = tf.sequential()
-const BATCH_SIZE = 50
-const IMG_SIZE = [227, 227]
+const BATCH_SIZE = config.BATCH_SIZE
+const IMG_SIZE = config.IMG_SIZE
 
 model.add(
     tf.layers.conv2d({

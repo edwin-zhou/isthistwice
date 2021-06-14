@@ -5,17 +5,24 @@ const express = require('express');
 const app = express()
 const PORT = process.env.PORT || 3000
 
-const IMG_SIZE = require('./model').IMG_SIZE
+var config = require('./settings')
 var model
 var dataset = require('./dataset.js');
 
 app.use((req,res,next) => {
+    res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.header('Access-Control-Expose-Headers', 'Content-Length');
+    res.header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Range');
     console.log(`${req.method} for ${req.url}`)
     next()
 })
 
-app.use((req,res,next) => {
-    express.static(path.join(__dirname, 'models', 'model1'))
+app.use('/models', express.static(__dirname + '/models'))
+
+app.use('/settings', (req, res, next) => {
+    res.json(config)
 })
 
 // tf.loadLayersModel('file://./models/model1/model.json')
@@ -34,7 +41,7 @@ function loadImage(dir, filename) {
     let buff = fs.readFileSync(pa)
 
     try {
-        let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
+        let t = tf.node.decodeImage(buff).resizeBilinear(config.IMG_SIZE)
         t = dataset.normalize(t)
         return tf.tensor4d([t], [1,200,200,3])
     } catch (error) {
