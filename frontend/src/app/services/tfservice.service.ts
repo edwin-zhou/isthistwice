@@ -32,6 +32,7 @@ export class TfserviceService {
 
   async loadModel() {
     this.model = await tf.loadLayersModel(environment.modelURL)
+    console.log('model loaded')
   }
 
   bufftoarr(tensor: Tensor3D) {

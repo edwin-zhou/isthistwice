@@ -47,7 +47,7 @@ export class AppComponent implements OnInit {
     reader.readAsDataURL(files[0]); 
     reader.onload = (_event) => { 
       this.picBuff = reader.result
-      return null
+      return
     }
   }
 
