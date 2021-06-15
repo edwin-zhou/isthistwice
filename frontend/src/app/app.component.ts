@@ -14,8 +14,11 @@ export class AppComponent implements OnInit {
   certainty: number = -1
   prediction: string = ''
 
+  imageURL: string = ''
+
   form: FormGroup = new FormGroup({
-    'pic': new FormControl('', [Validators.required])
+    'pic': new FormControl(''),
+    'url': new FormControl('')
   })
 
   constructor(private TfService: TfserviceService) {
@@ -24,6 +27,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.form.reset()
     this.picBuff = null
+    this.imageURL = ''
     this.prediction = ''
     this.certainty = -1
   }
@@ -46,6 +50,10 @@ export class AppComponent implements OnInit {
       return null
     }
   }
+
+  onUrlChange(event: any) {
+    this.imageURL = this.form.get('url')?.value
+  }
   
   deletePic() {
     this.ngOnInit()
@@ -54,6 +62,14 @@ export class AppComponent implements OnInit {
   onSubmit() {
     if (this.picBuff) {
       let pic = document.getElementById('subject')
+      let t = this.TfService.loadImage(pic)
+      let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
+
+      this.certainty = Math.max(...pred[0])
+      this.prediction = this.TfService.SPECIES[pred[0].indexOf(this.certainty)]
+    } else if (this.imageURL != '') {
+
+      let pic = document.getElementById('urlsubject')
       let t = this.TfService.loadImage(pic)
       let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
 

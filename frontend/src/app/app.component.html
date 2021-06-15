@@ -9,12 +9,22 @@
       rowspan='3'
       style="background: rgb(203, 250, 203)">
 
-      <div *ngIf='!picBuff' class="dropzone"> 
+      <div *ngIf='!picBuff && imageURL === ""' class="dropzone"> 
         <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
+        <span>OR</span>
+        <mat-form-field appearance='fill' style="width: 90%;">
+          <input matInput *ngIf='!picBuff' type="url" formControlName='url' (change)='onUrlChange($event)' placeholder="paste image url">
+        </mat-form-field>
       </div>
-
       <div *ngIf='picBuff'>
         <img id='subject'  [src]="picBuff" style="max-width: 100%; max-height: 100%;" class="upload">
+        <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf='imageURL != ""'>
+        <img id='urlsubject'  [src]="imageURL" style="max-width: 100%; max-height: 100%;" class="upload" crossorigin='anonymous'>
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>

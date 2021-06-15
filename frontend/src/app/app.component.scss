@@ -1,12 +1,18 @@
  .dropzone {
-    display: flex;
-    text-align: center;
-    vertical-align: middle;
     align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    text-align: center;
     height: 80%;
     width: 80%;
     z-index: 5;
     padding: 2rem;
     border: dashed 1px #979797;
-    margin: 0 auto;
+}
+
+.upload {
+    align-content: center;
+    align-items: center;
+    align-self: center;
 }

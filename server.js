@@ -19,6 +19,10 @@ app.use((req,res,next) => {
     next()
 })
 
+app.use('/', (req,res,next) => {
+    express.static('./frontend/dist/frontend/index.html')
+})
+
 app.use('/models', express.static(__dirname + '/models'))
 
 app.use('/settings', (req, res, next) => {
