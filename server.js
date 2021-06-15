@@ -27,9 +27,12 @@ app.use('/settings', (req, res, next) => {
     res.json(config)
 })
 
-app.use('/', (req,res,next) => {
-    express.static('./frontend/dist/frontend/index.html')
-})
+app.use(express.static(path.join(__dirname, 'frontend', 'dist', 'frontend')))
+
+app.get('/*', async (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'frontend', 'index.html'));
+});
+
 // tf.loadLayersModel('file://./models/model1/model.json')
 // .then(mod => {
 //     model = mod
