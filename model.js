@@ -10,8 +10,18 @@ const IMG_SIZE = config.IMG_SIZE
 model.add(
     tf.layers.conv2d({
         inputShape: IMG_SIZE.concat([3]),
-        kernelSize: 25,
+        kernelSize: 7,
+        padding: 'same',
         filters: 16,
+        activation: 'relu',
+    })
+)
+
+model.add(
+    tf.layers.conv2d({
+        kernelSize: 7,
+        padding: 'same',
+        filters: 32,
         activation: 'relu',
     })
 )
@@ -21,7 +31,8 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(
     tf.layers.conv2d({
         kernelSize: 7,
-        filters: 32,
+        padding: 'same',
+        filters: 64,
         activation: 'relu',
     })
 )
@@ -31,7 +42,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(tf.layers.flatten());
 
 model.add(tf.layers.dense({
-    units: 128,
+    units: 256,
     activation: 'relu'
 }));
 
@@ -45,5 +56,7 @@ model.compile({
     loss: 'binaryCrossentropy',
     metrics: ['accuracy'],
 });
+
+// model.summary()
 
 module.exports = {model, BATCH_SIZE, IMG_SIZE}

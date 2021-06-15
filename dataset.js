@@ -179,5 +179,5 @@ function shuffle(arr) {
 //     console.log(err)
 // })
 
-module.exports = {ds, SAMPLE_SIZE: BATCH_SIZE , normalize}
+module.exports = {ds, normalize}
 
