@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node-gpu');
+// const tf = require('@tensorflow/tfjs-node-gpu');
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000
 
 var config = require('./settings')
 var model
-var dataset = require('./dataset.js');
+// var dataset = require('./dataset.js');
 
 app.use((req,res,next) => {
     res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
@@ -19,14 +19,14 @@ app.use((req,res,next) => {
     next()
 })
 
-
-
 app.use('/models', express.static(__dirname + '/models'))
 
 app.use('/settings', (req, res, next) => {
     res.json(config)
 })
 
+
+// serve angular
 app.use(express.static(path.join(__dirname, 'frontend', 'dist', 'frontend')))
 
 app.get('/*', async (req, res) => {
@@ -43,19 +43,19 @@ app.get('/*', async (req, res) => {
 //     console.log(err)
 // })
 
-function loadImage(dir, filename) {
-    let pa = path.join(__dirname, 'petimages', dir,  filename)
+// function loadImage(dir, filename) {
+//     let pa = path.join(__dirname, 'petimages', dir,  filename)
 
-    let buff = fs.readFileSync(pa)
+//     let buff = fs.readFileSync(pa)
 
-    try {
-        let t = tf.node.decodeImage(buff).resizeBilinear(config.IMG_SIZE)
-        t = dataset.normalize(t)
-        return tf.tensor4d([t], [1,200,200,3])
-    } catch (error) {
-        console.log(error)        
-    }
-}
+//     try {
+//         let t = tf.node.decodeImage(buff).resizeBilinear(config.IMG_SIZE)
+//         t = dataset.normalize(t)
+//         return tf.tensor4d([t], [1,200,200,3])
+//     } catch (error) {
+//         console.log(error)        
+//     }
+// }
 
 app.listen(PORT, () => {
     console.log(`running on port ${PORT}`)
