@@ -8,8 +8,13 @@ const BATCH_SIZE = config.BATCH_SIZE
 const IMG_SIZE = config.IMG_SIZE
 
 model.add(
+    tf.layers.batchNormalization({
+        inputShape: IMG_SIZE.concat([3])
+    })
+)
+
+model.add(
     tf.layers.conv2d({
-        inputShape: IMG_SIZE.concat([3]),
         kernelSize: 7,
         padding: 'same',
         filters: 16,
@@ -19,7 +24,7 @@ model.add(
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 7,
+        kernelSize: 5,
         padding: 'same',
         filters: 32,
         activation: 'relu',
@@ -30,7 +35,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 7,
+        kernelSize: 3,
         padding: 'same',
         filters: 64,
         activation: 'relu',
@@ -42,7 +47,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 model.add(tf.layers.flatten());
 
 model.add(tf.layers.dense({
-    units: 256,
+    units: 10,
     activation: 'relu'
 }));
 
@@ -57,6 +62,6 @@ model.compile({
     metrics: ['accuracy'],
 });
 
-// model.summary()
+model.summary()
 
 module.exports = {model, BATCH_SIZE, IMG_SIZE}
