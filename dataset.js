@@ -4,41 +4,39 @@ const fs = require('fs');
 const e = require('express');
 
 var model = require('./model').model
-var congif = require('./settings')
-var BATCH_SIZE = require('./model').BATCH_SIZE
-const IMG_SIZE = require('./model').IMG_SIZE
+var config = require('./settings')
 
-const species = congif.SPECIES
 var pointers = []
 var xs, ys, ds
-var validationSize = congif.VALIDATION_SIZE
+var validationSize = config.VALIDATION_SIZE
 var vxs = []
 var vys = []
 
 xs = tf.data.generator(data)
 ys = tf.data.generator(labels)
-ds = tf.data.zip({xs, ys}).batch(BATCH_SIZE)
+// ds = tf.data.zip({xs, ys}).map(e => {return augment(e)}).shuffle(config.BATCH_SIZE).batch(config.BATCH_SIZE)
+ds = tf.data.zip({xs, ys}).shuffle(config.BATCH_SIZE).batch(config.BATCH_SIZE)
+
 
 var files = []
-species.forEach((name, i) => {
-    let pa = path.join(__dirname, 'petimages', name)
-    let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg'})
-    files.push(filenames.slice(0, 10000))
+config.LABELS.forEach((name, i) => {
+    let pa = path.join(__dirname, 'images', name)
+    let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
+    files.push(filenames.slice(0, 156))
     pointers.push(getSample(files[i],i))
-
     let count = 0
-    let s = getSample(filenames, i)
-    for (let x=0;count<validationSize/2;x++) {
-        let e = s.next()
-        vxs.push(tf.tensor3d(e.value))
-        vys.push(tf.oneHot(i, species.length))
-        count++
-    }
+    // let s = getSample(filenames, i)
+    // for (let x=0;count<validationSize/2;x++) {
+    //     let e = s.next()
+    //     vxs.push(tf.tensor3d(e.value))
+    //     vys.push(tf.oneHot(i, species.length))
+    //     count++
+    // }
 })
 
 var validX = tf.data.array(vxs)
 var validY = tf.data.array(vys)
-var validData = tf.data.zip({xs: validX, ys: validY}).batch(BATCH_SIZE).shuffle(BATCH_SIZE)
+var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE).shuffle(config.BATCH_SIZE)
 
 var curIndex = 0
 function* data() {
@@ -52,12 +50,9 @@ function* data() {
         for (let x=0;x<files.length;x++) {
             let s = pointers[x].next()
             if (!s.done) {
-                if (s.value == null) {
-                    console.log('wtffffffffffff')
-                }
                 curIndex = x
                 // numCalled++
-                yield tf.tensor3d(s.value)
+                yield s.value
             } else {
                 files.forEach((e, i) => {
                     shuffle(e)
@@ -73,20 +68,19 @@ function* data() {
 function* getSample(arr, speciesIndex) {
     for(let x=0; x<arr.length; x++) {
         try {
-            let filePath = path.join(__dirname, 'petimages', species[speciesIndex], arr[x])
-            if (path.extname(filePath) === '.jpeg' || path.extname(filePath) === '.jpg') {
-                let s = tf.tidy(() => {
-                    let buff = fs.readFileSync(filePath)
-                    let t = tf.node.decodeImage(buff).resizeBilinear(IMG_SIZE)
-                    if (t.shape.toString() === IMG_SIZE.concat([3]).toString()) {
-                        return normalize(t)
-                    } else {
-                        return
-                    }
-                })
-                if (s) {
-                    yield s
+            let filePath = path.join(__dirname, 'images', config.LABELS[speciesIndex], arr[x])
+            let s = tf.tidy(() => {
+                let buff = fs.readFileSync(filePath)
+                let t = tf.node.decodeImage(buff)
+                t = tf.pad(t, getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)
+                if (t.shape.toString() === config.IMG_SIZE.concat([3]).toString()) {
+                    return t
+                } else {
+                    return
                 }
+            })
+            if (s) {
+                yield s
             }
         } catch (error) {
             // console.log(error)
@@ -97,33 +91,60 @@ function* getSample(arr, speciesIndex) {
 
 function* labels() {
     while(true) {
-        yield tf.oneHot(curIndex, species.length) 
+        yield tf.oneHot(curIndex, config.LABELS.length) 
     }
 }
 
-function normalize(tensor) {
-    let t = tf.tidy(() => {
-        if (tensor.shape.toString() === IMG_SIZE.concat([3]).toString()) {
-            let ta = tensor.arraySync()
+function getPadding(shape) {
+    let arr = [[0,0],[0,0],[0,0]]
+    let dif = shape[0]-shape[1]
 
-            let m = tf.moments(tensor)
+    dif>0? arr[1] = [Math.abs(dif/2), Math.abs(dif/2)] : arr[0] = [Math.abs(dif/2), Math.abs(dif/2)] 
 
-            let mean = m.mean.dataSync()[0]
-            let stdev = Math.max(tf.sqrt(m.variance).dataSync()[0], 1/Math.sqrt(IMG_SIZE[0]*IMG_SIZE[1]*3)) 
-
-            for (let x=0;x<IMG_SIZE[0];x++) {
-                for (let y=0;y<IMG_SIZE[1];y++) {
-                    for (let z=0;z<3;z++) {
-                        let v = ta[x][y][z]
-                        ta[x][y][z] = (v - mean) / stdev
-                    }
-                }
-            }
-            return ta
-        } 
-    })
-    return t
+    return arr
 }
+
+function augment(sample) {
+    let t = tf.expandDims(sample.xs)
+
+    // flip
+    // if (Math.round(Math.random()) === 1) {
+    //   t = tf.image.flipLeftRight(t)          
+    // }
+
+    // rotate
+    // if (Math.round(Math.random()) === 1) {
+    //     let rad = Math.random()*(2*Math.PI)
+    //     let center = Math.random() * .5
+
+    //     t = tf.image.rotateWithOffset(t, rad, 0, center)
+    // }
+    return {xs: tf.unstack(t)[0], ys: sample.ys} 
+}
+
+// function normalize(tensor) {
+//     let t = tf.tidy(() => {
+//         if (tensor.shape.toString() === IMG_SIZE.concat([3]).toString()) {
+//             let ta = tensor.arraySync()
+
+//             let m = tf.moments(tensor)
+
+//             let mean = m.mean.dataSync()[0]
+//             let stdev = Math.max(tf.sqrt(m.variance).dataSync()[0], 1/Math.sqrt(IMG_SIZE[0]*IMG_SIZE[1]*3)) 
+
+//             for (let x=0;x<IMG_SIZE[0];x++) {
+//                 for (let y=0;y<IMG_SIZE[1];y++) {
+//                     for (let z=0;z<3;z++) {
+//                         let v = ta[x][y][z]
+//                         ta[x][y][z] = (v - mean) / stdev
+//                     }
+//                 }
+//             }
+//             return ta
+//         } 
+//     })
+//     return t
+// }
 
 function shuffle(arr) {
     for (let x=arr.length-1;x>0;x--) {
@@ -134,11 +155,11 @@ function shuffle(arr) {
     }
 }
 
-// ds.take(2).forEachAsync(e => {
+// ds.take(1).forEachAsync(e => {
 //     e.xs.arraySync().forEach((arr, i) => {
 //         tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
 //         .then(a => {
-//             fs.writeFileSync(path.join(__dirname, 'models', i.toString() + '.jpg'), a)
+//             fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
 //         })
 //         .catch(err => {
 //             console.log('niktram')
@@ -147,37 +168,35 @@ function shuffle(arr) {
 //     e.ys.print()
 // })
 
-// xs.forEachAsync(e => {
-//     // if (typeof(e) != tf.Tensor) {
-//     //     console.log(e)
-//     //     tf.dispose(e)
-//     // } else{
-//     //     console.log(e)
-//     //     setTimeout(() => {}, 2000)
-//     // }
-// })
 
+async function trainModel() {
+    model.fitDataset(ds, {
+        epochs: config.EPOCHS,
+        batchesPerEpoch: config.BATCHES_PER_EPOCH,
+        // validationData: validData,
+        // validationBatches: 2,
+        // callbacks: {
+        //     onEpochEnd: () => {
 
-// model.fitDataset(ds, {
-//     epochs: 15,
-//     batchesPerEpoch: 400,
-//     validationData: validData,
-//     validationBatches: 2,
-//     callbacks: tf.callbacks.earlyStopping()
-// })
-// .then(history => {
-//     model.save('file://./models/model1')
-//     .then(res => {
-//         console.log(res)
-//         console.log(history.history)
-//     })
-//     .catch(err => {
-//             console.log(err)
-//      })
-// })
-// .catch(err => {
-//     console.log(err)
-// })
+        //     }
+        // }
+    })
+    .then(history => {
+        model.save('file://./models/model1')
+        .then(res => {
+            console.log(history.history)
+            return history
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    })
+    .catch(err => {
+        console.log(err)
+    })
+}
 
-module.exports = {ds, normalize}
+trainModel()
+
+module.exports = {ds}
 

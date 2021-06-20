@@ -1,8 +1,10 @@
 var config = {
-    BATCH_SIZE: 50,
+    BATCH_SIZE: 12,
+    BATCHES_PER_EPOCH: 26,
+    EPOCHS: 20,
     VALIDATION_SIZE: 100,
-    IMG_SIZE: [128,128],
-    SPECIES: ['Dog', 'Cat'],
+    IMG_SIZE: [512,512],
+    LABELS: ['chae', 'others'],
 }
 
 module.exports = config

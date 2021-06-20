@@ -1,7 +1,7 @@
 const tf = require('@tensorflow/tfjs-node-gpu');
 var config = require('./settings')
 
-const species = config.SPECIES
+const species = config.LABELS
 
 var model = tf.sequential()
 const BATCH_SIZE = config.BATCH_SIZE
