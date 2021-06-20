@@ -2,9 +2,12 @@ const tf = require('@tensorflow/tfjs-node-gpu')
 const fs = require('fs')
 const path = require('path')
 
-let pa = path.join(__dirname, 'images', 'faces', 'IMG_6556.jpg')
+let pa = path.join(__dirname, 'images', 'chae', 'IMG_2956.JPG')
 
-let t = tf.node.decodeJpeg(fs.readFileSync(pa)).pad([[420,420], [0, 0], [0,0]], 0)
+let t = tf.node.decodeJpeg(fs.readFileSync(pa))
+t = tf.cast(t, 'float32')
+t = tf.image.flipLeftRight(t.expandDims())
+
 
 tf.node.encodeJpeg(t, 'rgb')
 .then(e => {

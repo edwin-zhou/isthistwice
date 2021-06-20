@@ -66,7 +66,7 @@ export class AppComponent implements OnInit {
       let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
 
       this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.SPECIES[pred[0].indexOf(this.certainty)]
+      this.prediction = this.TfService.LABELS[pred[0].indexOf(this.certainty)]
     } else if (this.imageURL != '') {
 
       let pic = document.getElementById('urlsubject')
@@ -74,7 +74,7 @@ export class AppComponent implements OnInit {
       let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
 
       this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.SPECIES[pred[0].indexOf(this.certainty)]
+      this.prediction = this.TfService.LABELS[pred[0].indexOf(this.certainty)]
     }
   }
 

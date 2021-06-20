@@ -1,4 +1,5 @@
 const tf = require('@tensorflow/tfjs-node-gpu');
+var blazeface = require('@tensorflow-models/blazeface')
 const path = require('path');
 const fs = require('fs');
 const e = require('express');
@@ -14,15 +15,21 @@ var vys = []
 
 xs = tf.data.generator(data)
 ys = tf.data.generator(labels)
-// ds = tf.data.zip({xs, ys}).map(e => {return augment(e)}).shuffle(config.BATCH_SIZE).batch(config.BATCH_SIZE)
-ds = tf.data.zip({xs, ys}).shuffle(config.BATCH_SIZE).batch(config.BATCH_SIZE)
+ds = tf.data.zip({xs, ys}).map(e => {return augment(e)}).batch(config.BATCH_SIZE)
+// ds = tf.data.zip({xs, ys}).shuffle(config.BATCH_SIZE).batch(config.BATCH_SIZE)
 
 
 var files = []
 config.LABELS.forEach((name, i) => {
     let pa = path.join(__dirname, 'images', name)
     let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
-    files.push(filenames.slice(0, 156))
+    if (i === 0) {
+        files.push(filenames)
+    } else {
+        files.push(filenames.slice(0, files[0].length*2))
+        console.log(files[i])
+    }
+
     pointers.push(getSample(files[i],i))
     let count = 0
     // let s = getSample(filenames, i)
@@ -34,9 +41,9 @@ config.LABELS.forEach((name, i) => {
     // }
 })
 
-var validX = tf.data.array(vxs)
-var validY = tf.data.array(vys)
-var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE).shuffle(config.BATCH_SIZE)
+// var validX = tf.data.array(vxs)
+// var validY = tf.data.array(vys)
+// var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
 
 var curIndex = 0
 function* data() {
@@ -105,12 +112,12 @@ function getPadding(shape) {
 }
 
 function augment(sample) {
-    let t = tf.expandDims(sample.xs)
+    let t = sample.xs
 
     // flip
-    // if (Math.round(Math.random()) === 1) {
-    //   t = tf.image.flipLeftRight(t)          
-    // }
+    if (Math.round(Math.random()) === 1) {
+        t = t.reverse(1)        
+    }
 
     // rotate
     // if (Math.round(Math.random()) === 1) {
@@ -119,7 +126,7 @@ function augment(sample) {
 
     //     t = tf.image.rotateWithOffset(t, rad, 0, center)
     // }
-    return {xs: tf.unstack(t)[0], ys: sample.ys} 
+    return {xs: t, ys: sample.ys} 
 }
 
 // function normalize(tensor) {
@@ -155,17 +162,36 @@ function shuffle(arr) {
     }
 }
 
-// ds.take(1).forEachAsync(e => {
-//     e.xs.arraySync().forEach((arr, i) => {
-//         tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
-//         .then(a => {
-//             fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
+
+
+// blazeface.load()
+// .then(model => {
+//     ds.take(1).forEachAsync(e => {
+//         e.xs.arraySync().forEach((t) => {
+//             model.estimateFaces(tf.tensor3d(t), false)
+//             .then(val => {
+//                 if (!val[0]) {
+//                     console.log('ogno')
+//                 }
+//             })
+//             .catch(err => {
+//                 console.log(err)
+//             })
 //         })
-//         .catch(err => {
-//             console.log('niktram')
-//         })
+
+
+//             // tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
+//             // .then(a => {
+//             //     fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
+//             // })
+//             // .catch(err => {
+//             //     console.log('niktram')
+//             // })
+//         // e.ys.print()
 //     })
-//     e.ys.print()
+// })
+// .catch(err => {
+//     console.log(err)
 // })
 
 
@@ -175,14 +201,20 @@ async function trainModel() {
         batchesPerEpoch: config.BATCHES_PER_EPOCH,
         // validationData: validData,
         // validationBatches: 2,
-        // callbacks: {
-        //     onEpochEnd: () => {
-
-        //     }
-        // }
+        callbacks: {
+            onEpochEnd: () => {
+                model.save('file://./models/model2')
+                .then(res => {
+                    console.log(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                })
+            }
+        }
     })
     .then(history => {
-        model.save('file://./models/model1')
+        model.save('file://./models/model2')
         .then(res => {
             console.log(history.history)
             return history

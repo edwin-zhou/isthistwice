@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   mainURL: 'http://localhost:3000',
 
-  modelURL: "http://localhost:3000/models/model1/model.json",
+  modelURL: "http://localhost:3000/models/model2/model.json",
 
 };
 
