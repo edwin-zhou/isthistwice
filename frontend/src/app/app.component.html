@@ -9,35 +9,56 @@
       rowspan='3'
       style="background: rgb(203, 250, 203)">
 
-      <div *ngIf='!picBuff && imageURL === ""' class="dropzone"> 
+      <mat-spinner *ngIf='!modelLoaded'></mat-spinner>
+
+      <div *ngIf='!picBuff && imageURL === "" && modelLoaded' class="dropzone"> 
         <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
-        <span>OR</span>
+        <!-- <span>OR</span>
         <mat-form-field appearance='fill' style="width: 90%;">
           <input matInput *ngIf='!picBuff' type="url" formControlName='url' (change)='onUrlChange($event)' placeholder="paste image url">
-        </mat-form-field>
+        </mat-form-field> -->
       </div>
-      <div *ngIf='picBuff'>
-        <img id='subject'  [src]="picBuff" style="max-width: 100%; max-height: 100%;" class="upload">
+
+      <div *ngIf='picBuff && modelLoaded' >
+        <img id='subject' [src]="picBuff" class="upload" >
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>
       </div>
 
-      <div *ngIf='imageURL != ""'>
-        <img id='urlsubject'  [src]="imageURL" style="max-width: 100%; max-height: 100%;" class="upload" crossorigin='anonymous'>
+      <div *ngIf='imageURL != "" && modelLoaded' >
+        <img id='urlsubject' [src]="imageURL" class="upload"  crossorigin='anonymous'>
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>
       </div>
+
     </mat-grid-tile>
 
     <mat-grid-tile
       colspan='1'
       rowspan='3'
       style="background: lightblue">
+      <div *ngIf='prediction === ""'>
+        <h1>
+          Detects chae
+        </h1>
+        <h3>
+          upload an image
+          <br>
+          <mat-icon>keyboard_backspace</mat-icon>
+        </h3>
+      </div>
       <div *ngIf='prediction != ""'>
-        <h2>  
+        <h2 *ngIf='.8 <= certainty'>
           This is a {{prediction}}!
+          <p [innerHTML]='sb'></p> 
+        </h2>
+        <h2 *ngIf='.7 <= certainty && .8 > certainty'>  
+          Probably a {{prediction}}! 
+        </h2>
+        <h2 *ngIf='.5 < certainty && .7 > certainty'>
+          Looks like a {{prediction}}??
         </h2>
         <h3>
           {{certainty | percent}}

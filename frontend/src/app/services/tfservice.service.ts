@@ -1,28 +1,35 @@
 import { environment } from 'src/environments/environment';
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable, OnInit, Output } from '@angular/core';
 import * as tf from '@tensorflow/tfjs'
 import { Tensor3D } from '@tensorflow/tfjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TfserviceService {
   model!: tf.LayersModel
-  LABELS!: string[]
-  IMG_SIZE! : [number, number]
+
   settings: {
     [key: string]: any,
   } = {}
   
+  private _modelLoaded: BehaviorSubject<boolean> = new BehaviorSubject(false as boolean)
+  modelLoaded = this._modelLoaded.asObservable()
+
   constructor() { 
     fetch(environment.mainURL + '/settings')
     .then(res => {
       res.json()
       .then(obj => {
         this.settings = obj
-        this.LABELS = obj.LABELS
-        this.IMG_SIZE = obj.IMG_SIZE
         this.loadModel()
+        .then(() => {
+          this._modelLoaded.next(true)
+        })
+        .catch(err => {
+          this._modelLoaded.next(false)
+        })
       })
       .catch(err => {
         console.log(err)
@@ -50,7 +57,7 @@ export class TfserviceService {
 
   loadImage(img: any): tf.Tensor3D {
     let t = tf.browser.fromPixels(img)
-    return t.pad(this.getPadding(t.shape)).resizeBilinear(this.IMG_SIZE)
+    return t.pad(this.getPadding(t.shape)).resizeBilinear(this.settings.IMG_SIZE)
   }
 
   getPadding(shape: any): [number,number][] {
