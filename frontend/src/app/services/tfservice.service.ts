@@ -47,8 +47,7 @@ export class TfserviceService {
 
   loadImage(img: any): tf.Tensor3D {
     let t = tf.browser.fromPixels(img)
-    let s = t.shape
-    return t.pad(this.getPadding(s)).resizeBilinear(this.IMG_SIZE)
+    return t.pad(this.getPadding(t.shape)).resizeBilinear(this.IMG_SIZE)
   }
 
   getPadding(shape: any): [number,number][] {
