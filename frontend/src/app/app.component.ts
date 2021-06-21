@@ -1,14 +1,17 @@
 import { Tensor3D } from '@tensorflow/tfjs';
 import { TfserviceService } from './services/tfservice.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, NgControl, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  sb: string = '&#127827'
+
   title = 'frontend';
   picBuff: any
   certainty: number = -1
@@ -21,6 +24,9 @@ export class AppComponent implements OnInit {
     'url': new FormControl('')
   })
 
+  modelSub!: Subscription
+  modelLoaded: boolean = false
+
   constructor(private TfService: TfserviceService) {
   }
 
@@ -30,6 +36,8 @@ export class AppComponent implements OnInit {
     this.imageURL = ''
     this.prediction = ''
     this.certainty = -1
+
+    this.modelSub = this.TfService.modelLoaded.subscribe(o => {this.modelLoaded = o})
   }
 
   onFileChange(event: any) {
@@ -56,6 +64,7 @@ export class AppComponent implements OnInit {
   }
   
   deletePic() {
+    this.ngOnDestroy()
     this.ngOnInit()
   }
 
@@ -66,7 +75,7 @@ export class AppComponent implements OnInit {
       let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
 
       this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.LABELS[pred[0].indexOf(this.certainty)]
+      this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
     } else if (this.imageURL != '') {
 
       let pic = document.getElementById('urlsubject')
@@ -74,8 +83,12 @@ export class AppComponent implements OnInit {
       let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
 
       this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.LABELS[pred[0].indexOf(this.certainty)]
+      this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
     }
+  }
+
+  ngOnDestroy() {
+    this.modelSub.unsubscribe()
   }
 
 }
