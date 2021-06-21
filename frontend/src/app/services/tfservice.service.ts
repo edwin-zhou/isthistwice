@@ -15,8 +15,6 @@ export class TfserviceService {
   } = {}
   
   constructor() { 
-    this.loadModel()
-
     fetch(environment.mainURL + '/settings')
     .then(res => {
       res.json()
@@ -24,6 +22,7 @@ export class TfserviceService {
         this.settings = obj
         this.LABELS = obj.LABELS
         this.IMG_SIZE = obj.IMG_SIZE
+        this.loadModel()
       })
       .catch(err => {
         console.log(err)
@@ -35,7 +34,7 @@ export class TfserviceService {
   }
 
   async loadModel() {
-    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + this.settings.MODEL_NAME)
+    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME)
     console.log('model loaded')
   }
 
