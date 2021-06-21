@@ -7,7 +7,7 @@
     <mat-grid-tile
       colspan='3'
       rowspan='3'
-      style="background: rgb(203, 250, 203)">
+      style="background: rgb(203, 250, 203);">
 
       <mat-spinner *ngIf='!modelLoaded'></mat-spinner>
 
@@ -27,7 +27,7 @@
       </div>
 
       <div *ngIf='imageURL != "" && modelLoaded' >
-        <img id='urlsubject' [src]="imageURL" class="upload"  crossorigin='anonymous'>
+        <img id='urlsubject' [src]="imageURL" class="upload" crossorigin='anonymous'>
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>
@@ -50,15 +50,20 @@
         </h3>
       </div>
       <div *ngIf='prediction != ""'>
-        <h2 *ngIf='.8 <= certainty'>
-          This is a {{prediction}}!
-          <p [innerHTML]='sb'></p> 
-        </h2>
-        <h2 *ngIf='.7 <= certainty && .8 > certainty'>  
-          Probably a {{prediction}}! 
-        </h2>
-        <h2 *ngIf='.5 < certainty && .7 > certainty'>
-          Looks like a {{prediction}}??
+        <span *ngIf='prediction === labels[0]'>
+          <h2 *ngIf='.8 <= certainty'>
+            This is a {{prediction}}!
+            <p [innerHTML]='sb'></p> 
+          </h2>
+          <h2 *ngIf='.7 <= certainty && .8 > certainty'>  
+            Probably a {{prediction}}! 
+          </h2>
+          <h2 *ngIf='.5 < certainty && .7 > certainty'>
+            Looks like a {{prediction}}??
+          </h2>
+        </span>
+        <h2 *ngIf='prediction != labels[0]'>
+          This is a {{prediction}}
         </h2>
         <h3>
           {{certainty | percent}}

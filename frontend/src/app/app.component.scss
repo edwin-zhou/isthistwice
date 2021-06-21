@@ -4,15 +4,17 @@
     flex-direction: column;
     justify-content: space-around;
     text-align: center;
-    height: 80%;
+    height: 50%;
     width: 80%;
     z-index: 5;
-    padding: 2rem;
+    // padding: 2rem;
     border: dashed 1px #979797;
 }
 
 .upload {
-    object-fit: contain;
-    height: 100%;
-    width: 100%;
+    margin: 5 auto;
+    padding: auto;
+    object-fit:scale-down;
+    height: 70vh;
+    // width: 90%;
 }

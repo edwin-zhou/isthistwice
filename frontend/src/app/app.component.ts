@@ -16,6 +16,7 @@ export class AppComponent implements OnInit, OnDestroy {
   picBuff: any
   certainty: number = -1
   prediction: string = ''
+  labels: string[] = []
 
   imageURL: string = ''
 
@@ -36,8 +37,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.imageURL = ''
     this.prediction = ''
     this.certainty = -1
+    this.labels = []
 
-    this.modelSub = this.TfService.modelLoaded.subscribe(o => {this.modelLoaded = o})
+    this.modelSub = this.TfService.modelLoaded.subscribe(o => {
+      this.modelLoaded = o
+      this.labels = this.TfService.settings.LABELS
+    })
   }
 
   onFileChange(event: any) {
