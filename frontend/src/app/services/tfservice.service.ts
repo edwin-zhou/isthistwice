@@ -34,7 +34,7 @@ export class TfserviceService {
   }
 
   async loadModel() {
-    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME)
+    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
     console.log('model loaded')
   }
 

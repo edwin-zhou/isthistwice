@@ -203,7 +203,7 @@ async function trainModel() {
         // validationBatches: 2,
         callbacks: {
             onEpochEnd: () => {
-                model.save('file://./models/model2')
+                model.save('file://./models/' + config.MODEL_NAME)
                 .then(res => {
                     console.log(res)
                 })
@@ -214,7 +214,7 @@ async function trainModel() {
         }
     })
     .then(history => {
-        model.save('file://./models/model2')
+        model.save('file://./models/' + config.MODEL_NAME)
         .then(res => {
             console.log(history.history)
             return history
