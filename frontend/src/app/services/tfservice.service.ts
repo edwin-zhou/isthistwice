@@ -10,6 +10,9 @@ export class TfserviceService {
   model!: tf.LayersModel
   LABELS!: string[]
   IMG_SIZE! : [number, number]
+  settings: {
+    [key: string]: any,
+  } = {}
   
   constructor() { 
     this.loadModel()
@@ -18,6 +21,7 @@ export class TfserviceService {
     .then(res => {
       res.json()
       .then(obj => {
+        this.settings = obj
         this.LABELS = obj.LABELS
         this.IMG_SIZE = obj.IMG_SIZE
       })
@@ -31,7 +35,7 @@ export class TfserviceService {
   }
 
   async loadModel() {
-    this.model = await tf.loadLayersModel(environment.modelURL)
+    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + this.settings.MODEL_NAME)
     console.log('model loaded')
   }
 

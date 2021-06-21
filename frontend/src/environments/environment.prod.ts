@@ -3,5 +3,5 @@ export const environment = {
 
   mainURL: 'https://isthischae.herokuapp.com',
 
-  modelURL: "https://isthischae.herokuapp.com/models/model1/model.json",
+  modelURL: "https://isthischae.herokuapp.com/models/model2/model.json",
 };
