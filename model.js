@@ -57,10 +57,10 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
   
 model.add(tf.layers.flatten());
 
-// model.add(tf.layers.dense({
-//     units: 10,
-//     activation: 'relu'
-// }));
+model.add(tf.layers.dense({
+    units: 10,
+    activation: 'relu'
+}));
 
 model.add(tf.layers.dense({
   units: species.length,

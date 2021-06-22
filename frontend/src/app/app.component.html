@@ -75,9 +75,10 @@
       colspan='4'
       rowspan='1'
       style="background: lightgreen">
-      <button mat-raised-button mat-ripple color='primary' (onClick)='onSubmit()'>
+      <button mat-raised-button mat-ripple color='primary' (onClick)='onSubmit()' [disabled]='predicting'>
         Submit
       </button>
+      <mat-spinner *ngIf='predicting'></mat-spinner>
     </mat-grid-tile>
   </form>
 </mat-grid-list>

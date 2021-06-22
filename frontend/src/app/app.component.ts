@@ -27,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   modelSub!: Subscription
   modelLoaded: boolean = false
+  predicting: boolean = false
 
   constructor(private TfService: TfserviceService) {
   }
@@ -73,23 +74,27 @@ export class AppComponent implements OnInit, OnDestroy {
     this.ngOnInit()
   }
 
-  onSubmit() {
+  async onSubmit() {
+    this.predicting = true
     if (this.picBuff) {
-      let pic = document.getElementById('subject')
-      let t = this.TfService.loadImage(pic)
-      let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
+      let pic: HTMLImageElement = document.getElementById('subject') as HTMLImageElement
+      let t = await this.TfService.predict(pic)
 
-      this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
-    } else if (this.imageURL != '') {
-
-      let pic = document.getElementById('urlsubject')
-      let t = this.TfService.loadImage(pic)
-      let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
+      let pred: number[][] = t.arraySync() as number[][]
 
       this.certainty = Math.max(...pred[0])
       this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
     }
+    // else if (this.imageURL != '') {
+
+    //   let pic = document.getElementById('urlsubject')
+    //   let t = this.TfService.loadImage(pic)
+    //   let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
+
+    //   this.certainty = Math.max(...pred[0])
+    //   this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
+    // }
+    this.predicting = false
   }
 
   ngOnDestroy() {

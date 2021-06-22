@@ -12,9 +12,9 @@ async function main() {
     })
     .then(model => {
         // console.log(model)
-        let files = fs.readdirSync(path.join(__dirname, 'images', 'others'))
-        files.slice(0,100).forEach(filename => {
-            let t = loadImage('others', filename)
+        let files = fs.readdirSync(path.join(__dirname, 'images', 'chae'))
+        files.slice(0).forEach(filename => {
+            let t = loadImage('chae', filename)
             model.estimateFaces(t.resizeBilinear([256,256]), false)
             .then(val => {
                 if (val[0]) {
@@ -25,8 +25,7 @@ async function main() {
                     let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
                     tf.node.encodeJpeg(tt[0], 'rgb')
                     .then(a => {
-                        console.log(a)
-                        fs.writeFileSync(path.join(__dirname, 'images', 'processed', 'others+t', filename + 'ot.jpg'), a)
+                        fs.writeFileSync(path.join(__dirname, 'images', 'processed', 'chae', filename + '.jpg'), a)
                     })
                     .catch(err => {
                         console.log(err)
@@ -50,7 +49,7 @@ function loadImage(dir, filename) {
     try {
         let buff = fs.readFileSync(pa)
 
-            let t = tf.node.decodeImage(buff)
+            let t = tf.node.decodeImage(buff, 3)
             let tt = t.pad(getPadding(t.shape))
             return tt
         // tf.node.encodeJpeg(tt, 'rgb')

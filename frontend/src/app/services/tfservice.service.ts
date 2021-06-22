@@ -1,6 +1,7 @@
 import { environment } from 'src/environments/environment';
 import { Injectable, OnInit, Output } from '@angular/core';
 import * as tf from '@tensorflow/tfjs'
+import * as blazeface from '@tensorflow-models/blazeface'
 import { Tensor3D } from '@tensorflow/tfjs';
 import { BehaviorSubject } from 'rxjs';
 
@@ -9,6 +10,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class TfserviceService {
   model!: tf.LayersModel
+  blaze!: blazeface.BlazeFaceModel
 
   settings: {
     [key: string]: any,
@@ -23,7 +25,7 @@ export class TfserviceService {
       res.json()
       .then(obj => {
         this.settings = obj
-        this.loadModel()
+        this.loadModels()
         .then(() => {
           this._modelLoaded.next(true)
         })
@@ -40,9 +42,10 @@ export class TfserviceService {
     })
   }
 
-  async loadModel() {
+  async loadModels() {
     this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
-    console.log('model loaded')
+    this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
+    console.log('models loaded')
   }
 
   bufftoarr(tensor: Tensor3D) {
@@ -50,14 +53,32 @@ export class TfserviceService {
   }
 
   /** makes prediction over 1 image */
-  predict(tensor: tf.Tensor3D): tf.Tensor {
-    let pred: tf.Tensor | tf.Tensor[] = this.model.predict(tensor.expandDims(), {batchSize: 1})
-    return pred as tf.Tensor
+  async predict(image: HTMLImageElement): Promise<tf.Tensor> {
+    let i = this.loadImage(image)
+    let face = await this.cropImage(i)
+    let pred: tf.Tensor = this.model.predict(face.expandDims(), {batchSize: 1}) as tf.Tensor
+    return pred
+    // let pred: tf.Tensor | tf.Tensor[] = this.model.predict(tensor.expandDims(), {batchSize: 1})
+    // return pred as tf.Tensor
   }
 
-  loadImage(img: any): tf.Tensor3D {
+  /** convert htmlimage to tensor */
+  loadImage(img: HTMLImageElement): tf.Tensor3D {
     let t = tf.browser.fromPixels(img)
-    return t.pad(this.getPadding(t.shape)).resizeBilinear(this.settings.IMG_SIZE)
+    return t.pad(this.getPadding(t.shape))
+  }
+
+  /** returns face */
+  async cropImage(tensor: Tensor3D): Promise<Tensor3D> {
+    let t = tensor.resizeBilinear([256,256])
+    let arr = await this.blaze.estimateFaces(t as Tensor3D, false)
+    
+    let tl: number[] = (arr[0].topLeft as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
+    let br: number[] = (arr[0].bottomRight as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
+
+    return tf.tidy(() => {
+      return tf.image.cropAndResize(tensor.expandDims() as any, tf.tensor2d([tl.concat(br)]), [0], this.settings.IMG_SIZE).unstack()[0] as Tensor3D
+    })
   }
 
   getPadding(shape: any): [number,number][] {
@@ -68,30 +89,4 @@ export class TfserviceService {
 
     return arr
   }
-
-  // normalize(tensor: tf.Tensor3D): number[][][] {
-  //   let t = tf.tidy(() => {
-  //     if (tensor.shape.toString() === this.IMG_SIZE.concat([3]).toString()) {
-  //       let ta = tensor.arraySync()
-
-  //       let m = tf.moments(tensor)
-
-  //       let mean = m.mean.dataSync()[0]
-  //       let stdev = Math.max(tf.sqrt(m.variance).dataSync()[0], 1/Math.sqrt(this.IMG_SIZE[0]*this.IMG_SIZE[1]*3)) 
-
-  //       for (let x=0;x<this.IMG_SIZE[0];x++) {
-  //         for (let y=0;y<this.IMG_SIZE[1];y++) {
-  //             for (let z=0;z<3;z++) {
-  //                 let v = ta[x][y][z]
-  //                 ta[x][y][z] = (v - mean) / stdev
-  //             }
-  //         }
-  //       }
-  //       return ta
-  //     } else {
-  //       return []
-  //     } 
-  //   })
-  //   return t
-  // }
 }
