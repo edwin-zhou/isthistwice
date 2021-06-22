@@ -5,7 +5,7 @@ var config = {
     VALIDATION_SIZE: 100,
     IMG_SIZE: [256,256],
     LABELS: ['chae', 'others+t'],
-    MODEL_NAME: 'modelcto2'
+    MODEL_NAME: 'modelcto2-10d'
 }
 
 module.exports = config

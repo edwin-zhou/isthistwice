@@ -102,6 +102,10 @@ function getPadding(shape) {
     let arr = [[0,0],[0,0],[0,0]]
     let dif = shape[0]-shape[1]
 
+    if (dif === 0) {
+        return arr
+    }
+
     dif>0? arr[1] = [Math.abs(dif/2), Math.abs(dif/2)] : arr[0] = [Math.abs(dif/2), Math.abs(dif/2)] 
 
     return arr
