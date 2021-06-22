@@ -20,7 +20,7 @@ ds = tf.data.zip({xs, ys}).map(e => {return augment(e)}).batch(config.BATCH_SIZE
 
 var files = []
 config.LABELS.forEach((name, i) => {
-    let pa = path.join(__dirname, 'images', 'processed', name)
+    let pa = path.join(__dirname, config.IMG_PATH, name)
     let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
     shuffle(filenames)
     files.push(filenames)
@@ -71,7 +71,7 @@ function* data() {
 function* getSample(arr, speciesIndex) {
     for(let x=0; x<arr.length; x++) {
         try {
-            let filePath = path.join(__dirname, 'images', 'processed', config.LABELS[speciesIndex], arr[x])
+            let filePath = path.join(__dirname, config.IMG_PATH, config.LABELS[speciesIndex], arr[x])
             let s = tf.tidy(() => {
                 let buff = fs.readFileSync(filePath)
                 let t = tf.node.decodeImage(buff)

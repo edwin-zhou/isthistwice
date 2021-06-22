@@ -12,28 +12,21 @@ async function main() {
     })
     .then(model => {
         // console.log(model)
-        let files = fs.readdirSync(path.join(__dirname, 'images', 'chae'))
-        files.slice(0).forEach(filename => {
-            let t = loadImage('chae', filename)
-            model.estimateFaces(t.resizeBilinear([256,256]), false)
-            .then(val => {
-                if (val[0]) {
-                    // console.log(val[0])
-                    let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
-                    let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
-
-                    let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
-                    tf.node.encodeJpeg(tt[0], 'rgb')
-                    .then(a => {
-                        fs.writeFileSync(path.join(__dirname, 'images', 'processed', 'chae', filename + '.jpg'), a)
+        config.LABELS.forEach((la, index) => {
+            let files = fs.readdirSync(path.join(__dirname, config.IMG_PATH, la))
+            files.slice(0).forEach(filename => {
+                let t = loadImage(la, filename)
+    
+                if (t.shape.length === 4) {
+                    let b = t.unstack()
+                    b.forEach((e,i) => {
+                        tf.tidy(() => {
+                            saveFace(model, e.pad(getPadding(e.shape)), la, filename+i.toString())
+                        })
                     })
-                    .catch(err => {
-                        console.log(err)
-                    })
+                } else {
+                    saveFace(model, t.pad(getPadding(t.shape)), la ,filename)
                 }
-            })
-            .catch(err => {
-                console.log(err)
             })
         })
     })
@@ -44,14 +37,13 @@ async function main() {
 
 /**takes images subfolder and array of filenames, returns tensor4d */
 function loadImage(dir, filename) {
-    let pa = path.join(__dirname, 'images', dir,  filename)
+    let pa = path.join(__dirname, config.IMG_PATH, dir,  filename)
 
     try {
         let buff = fs.readFileSync(pa)
 
-            let t = tf.node.decodeImage(buff, 3)
-            let tt = t.pad(getPadding(t.shape))
-            return tt
+        let t = tf.node.decodeImage(buff, 3)
+        return t
         // tf.node.encodeJpeg(tt, 'rgb')
         // .then(a => {
         //     fs.writeFileSync(path.join(__dirname, 'images', 'resized', filename + '.jpg'), a)
@@ -64,9 +56,37 @@ function loadImage(dir, filename) {
     }
 }
 
+function saveFace(model, t, dir, filename) {
+    model.estimateFaces(t.resizeBilinear([256,256]), false)
+    .then(val => {
+        if (val[0]) {
+            // console.log(val[0])
+            let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
+            let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
+
+            let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
+            tf.node.encodeJpeg(tt[0], 'rgb')
+            .then(a => {
+                fs.writeFileSync(path.join(__dirname, 'images', 'processed', dir, filename + '.jpg'), a)
+                tf.dispose(t)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+        }
+    })
+    .catch(err => {
+        console.log(err)
+    })
+}
+
 function getPadding(shape) {
     let arr = [[0,0],[0,0],[0,0]]
     let dif = shape[0]-shape[1]
+    
+    if (dif === 0 ) {
+        return arr
+    }
 
     dif>0? arr[1] = [Math.abs(dif/2), Math.abs(dif/2)] : arr[0] = [Math.abs(dif/2), Math.abs(dif/2)] 
 
@@ -99,4 +119,4 @@ function normalize(tensor) {
     return t
 }
 
-// main()
+main()

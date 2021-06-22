@@ -45,7 +45,7 @@ export class TfserviceService {
   async loadModels() {
     this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
     this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
-    console.log('models loaded')
+    console.log(`loaded ${this.settings.MODEL_NAME}`)
   }
 
   bufftoarr(tensor: Tensor3D) {
@@ -84,6 +84,10 @@ export class TfserviceService {
   getPadding(shape: any): [number,number][] {
     let arr: [number,number][] = [[0,0],[0,0],[0,0]]
     let dif = shape[0]-shape[1]
+
+    if (dif === 0 ) {
+      return arr
+    }
 
     dif>0? arr[1] = [Math.abs(dif/2), Math.abs(dif/2)] : arr[0] = [Math.abs(dif/2), Math.abs(dif/2)] 
 
