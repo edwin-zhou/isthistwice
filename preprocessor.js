@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node-gpu')
+const tf = require('@tensorflow/tfjs-node')
 var blazeface = require('@tensorflow-models/blazeface')
 const fs = require('fs')
 const path = require('path')
@@ -7,43 +7,36 @@ const config = require('./settings')
 async function main() {
     blazeface.load({
         maxFaces: 1,
-        inputWidth: config.IMG_SIZE[0],
-        inputHeight: config.IMG_SIZE[1],
+        inputWidth: 128,
+        inputHeight: 128,
     })
     .then(model => {
         // console.log(model)
-        let files = fs.readdirSync(path.join(__dirname, 'images', 'chae'))
-        let s = [0,0,0]
+        let files = fs.readdirSync(path.join(__dirname, 'images', 'others'))
+        files.slice(0,100).forEach(filename => {
+            let t = loadImage('others', filename)
+            model.estimateFaces(t.resizeBilinear([256,256]), false)
+            .then(val => {
+                if (val[0]) {
+                    // console.log(val[0])
+                    let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
+                    let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
 
-        files.forEach(filename => {
-
-            let t = loadImage('chae', filename)
-
-            if (t.shape[0] > s[0]) {
-                console.log(filename)
-                console.log(t.shape)
-                s = t.shape
-            }
-            // model.estimateFaces(t, false)
-            // .then(val => {
-            //     let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([val[0].topLeft.map(e => {return e/config.IMG_SIZE[0]}).concat(val[0].bottomRight.map(e => {return e/config.IMG_SIZE[0]}))]), [0], config.IMG_SIZE).unstack()
-            //     tt.forEach(e => {
-            //         e.print
-            //     })
-            //     // tf.node.encodeJpeg(tt[0], 'rgb')
-            //     // .then(a => {
-            //     //     fs.writeFileSync(path.join(__dirname, 'images', 'resized', filename + '.jpg'), a)
-            //     // })
-            //     // .catch(err => {
-            //     //     console.log(err)
-            //     // })
-            // })
-            // .catch(err => {
-            //     console.log(err)
-            // })
+                    let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
+                    tf.node.encodeJpeg(tt[0], 'rgb')
+                    .then(a => {
+                        console.log(a)
+                        fs.writeFileSync(path.join(__dirname, 'images', 'processed', 'others+t', filename + 'ot.jpg'), a)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+                }
+            })
+            .catch(err => {
+                console.log(err)
+            })
         })
-        console.log(s)
-        
     })
     .catch(err => {
         console.log(err)
@@ -56,9 +49,10 @@ function loadImage(dir, filename) {
 
     try {
         let buff = fs.readFileSync(pa)
-        let t = tf.node.decodeImage(buff)
-        let tt = t.pad(getPadding(t.shape))
 
+            let t = tf.node.decodeImage(buff)
+            let tt = t.pad(getPadding(t.shape))
+            return tt
         // tf.node.encodeJpeg(tt, 'rgb')
         // .then(a => {
         //     fs.writeFileSync(path.join(__dirname, 'images', 'resized', filename + '.jpg'), a)
@@ -66,8 +60,6 @@ function loadImage(dir, filename) {
         // .catch(err => {
         //     console.log(err)
         // })
-
-        return tt
     } catch (error) {
         console.log(error)        
     }
@@ -108,6 +100,4 @@ function normalize(tensor) {
     return t
 }
 
-
-
-main()
+// main()

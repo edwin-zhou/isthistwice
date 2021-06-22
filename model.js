@@ -1,4 +1,4 @@
-const tf = require('@tensorflow/tfjs-node-gpu');
+const tf = require('@tensorflow/tfjs-node');
 var config = require('./settings')
 
 const species = config.LABELS
@@ -15,7 +15,7 @@ model.add(
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 7,
+        kernelSize: 5,
         padding: 'same',
         filters: 16,
         activation: 'relu',
@@ -24,7 +24,7 @@ model.add(
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 5,
+        kernelSize: 3,
         padding: 'same',
         filters: 32,
         activation: 'relu',
@@ -35,7 +35,7 @@ model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 3,
+        kernelSize: 2,
         padding: 'same',
         filters: 64,
         activation: 'relu',

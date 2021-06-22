@@ -1,5 +1,4 @@
-const tf = require('@tensorflow/tfjs-node-gpu');
-var blazeface = require('@tensorflow-models/blazeface')
+const tf = require('@tensorflow/tfjs-node');
 const path = require('path');
 const fs = require('fs');
 const e = require('express');
@@ -21,15 +20,10 @@ ds = tf.data.zip({xs, ys}).map(e => {return augment(e)}).batch(config.BATCH_SIZE
 
 var files = []
 config.LABELS.forEach((name, i) => {
-    let pa = path.join(__dirname, 'images', name)
+    let pa = path.join(__dirname, 'images', 'processed', name)
     let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
-    if (i === 0) {
-        files.push(filenames)
-    } else {
-        files.push(filenames.slice(0, files[0].length*2))
-        console.log(files[i])
-    }
-
+    shuffle(filenames)
+    files.push(filenames)
     pointers.push(getSample(files[i],i))
     let count = 0
     // let s = getSample(filenames, i)
@@ -39,7 +33,9 @@ config.LABELS.forEach((name, i) => {
     //     vys.push(tf.oneHot(i, species.length))
     //     count++
     // }
+    
 })
+
 
 // var validX = tf.data.array(vxs)
 // var validY = tf.data.array(vys)
@@ -75,7 +71,7 @@ function* data() {
 function* getSample(arr, speciesIndex) {
     for(let x=0; x<arr.length; x++) {
         try {
-            let filePath = path.join(__dirname, 'images', config.LABELS[speciesIndex], arr[x])
+            let filePath = path.join(__dirname, 'images', 'processed', config.LABELS[speciesIndex], arr[x])
             let s = tf.tidy(() => {
                 let buff = fs.readFileSync(filePath)
                 let t = tf.node.decodeImage(buff)
@@ -163,35 +159,15 @@ function shuffle(arr) {
 }
 
 
-
-// blazeface.load()
-// .then(model => {
-//     ds.take(1).forEachAsync(e => {
-//         e.xs.arraySync().forEach((t) => {
-//             model.estimateFaces(tf.tensor3d(t), false)
-//             .then(val => {
-//                 if (!val[0]) {
-//                     console.log('ogno')
-//                 }
-//             })
-//             .catch(err => {
-//                 console.log(err)
-//             })
-//         })
-
-
-//             // tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
-//             // .then(a => {
-//             //     fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
-//             // })
-//             // .catch(err => {
-//             //     console.log('niktram')
-//             // })
-//         // e.ys.print()
-//     })
-// })
-// .catch(err => {
-//     console.log(err)
+// ds.take(1).forEachAsync(e => {
+//     // tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
+//     // .then(a => {
+//     //     fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
+//     // })
+//     // .catch(err => {
+//     //     console.log('niktram')
+//     // })
+//     // e.ys.print()
 // })
 
 
@@ -205,7 +181,7 @@ async function trainModel() {
             onEpochEnd: () => {
                 model.save('file://./models/' + config.MODEL_NAME)
                 .then(res => {
-                    console.log(res)
+                    console.log('model saved')
                 })
                 .catch(err => {
                     console.log(err)
