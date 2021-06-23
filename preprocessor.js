@@ -4,28 +4,32 @@ const fs = require('fs')
 const path = require('path')
 const config = require('./settings')
 
+
+var readir = 'images/stash'
+var writedir = 'images/processed'
+
 async function main() {
+    let model = await tf.loadLayersModel('file://./models/' + config.MODEL_NAME + '/model.json')
     tf.tidy(() => {
         blazeface.load({
             maxFaces: 1,
             inputWidth: 128,
             inputHeight: 128,
         })
-        .then(model => {
+        .then(blaze => {
             // console.log(model)
             // config.LABELS.forEach((la, index) => {
-                let files = fs.readdirSync(path.join(__dirname, 'images', 'super', "Tzuyu"))
-                files.slice(0).forEach(filename => {
-                    let t = loadImage("Tzuyu", filename)
-                    console.log(t)
+                let files = fs.readdirSync(path.join(__dirname, readir))
+                files.slice(0,100).forEach(filename => {
+                    let t = loadImage(readir, filename)
         
-                    if (t.shape.length === 4) {
-                        let b = t.unstack()
-                        b.forEach((e,i) => {
-                            saveFace(model, e.pad(getPadding(e.shape)), "Tzuyu", filename+i.toString())
-                        })
+                    if (t.shape.length === 3) {
+                        // let b = t.unstack()
+                        // b.forEach((e,i) => {
+                        //     saveFace(model, e.pad(getPadding(e.shape)), "Tzuyu", filename+i.toString())
+                        // })
+                        saveFace(blaze, model, t, filename)
                     } else {
-                        saveFace(model, t.pad(getPadding(t.shape)), "Tzuyu" ,filename)
                     }
                 })
             // })
@@ -38,7 +42,7 @@ async function main() {
 
 /**takes images subfolder and array of filenames, returns tensor4d */
 function loadImage(dir, filename) {
-    let pa = path.join(__dirname, 'images', 'super', dir,  filename)
+    let pa = path.join(__dirname, dir, filename)
 
     try {
         let buff = fs.readFileSync(pa)
@@ -57,28 +61,47 @@ function loadImage(dir, filename) {
     }
 }
 
-function saveFace(model, t, dir, filename) {
-    model.estimateFaces(t.resizeBilinear([256,256]), false)
-    .then(val => {
-        if (val[0]) {
-            // console.log(val[0])
-            let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
-            let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
+async function saveFace(blaze, model, t, filename) {
+        blaze.estimateFaces(t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]), false)
+        .then(val => {
+            if (val[0]) {
+                // console.log(val[0])
+                let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
+                let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
+    
+                let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
+    
+                let pred = model.predict(tt[0].expandDims(), {batchSize: 1}).arraySync()[0]
 
-            let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
-            tf.node.encodeJpeg(tt[0], 'rgb')
-            .then(a => {
-                fs.writeFileSync(path.join(__dirname, 'images', 'processed', dir, filename + '.jpg'), a)
+                pred.forEach((e, i) => {
+                    if (e>=.20) {
+                        tf.node.encodeJpeg(t, 'rgb')
+                        .then(a => {
+                            fs.writeFileSync(path.join(__dirname, writedir, config.LABELS[i], filename), a)
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })    
+                    }
+                })
                 tf.dispose(t)
-            })
-            .catch(err => {
-                console.log(err)
-            })
-        }
-    })
-    .catch(err => {
-        console.log(err)
-    })
+
+                // write to highest prob
+                // let name = config.LABELS[pred.indexOf(Math.max(...pred))]
+    
+                // tf.node.encodeJpeg(t, 'rgb')
+                // .then(a => {
+                //     fs.writeFileSync(path.join(__dirname, writedir, name, filename), a)
+                //     tf.dispose(t)
+                // })
+                // .catch(err => {
+                //     console.log(err)
+                // })   
+            }
+        })
+        .catch(err => {
+            console.log(err)
+        })
 }
 
 function getPadding(shape) {
@@ -120,4 +143,4 @@ function normalize(tensor) {
     return t
 }
 
-// main()
+main()

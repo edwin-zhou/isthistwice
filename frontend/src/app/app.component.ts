@@ -81,7 +81,7 @@ export class AppComponent implements OnInit, OnDestroy {
       let t = await this.TfService.predict(pic)
 
       let pred: number[][] = t.arraySync() as number[][]
-      console.log(pred)
+      console.log(pred[0])
       this.certainty = Math.max(...pred[0])
       this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
     }

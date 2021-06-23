@@ -51,15 +51,9 @@
       </div>
       <div *ngIf='prediction != ""'>
         <span *ngIf='prediction === labels[0]'>
-          <h2 *ngIf='.8 <= certainty'>
+          <h2>
             This is a {{prediction}}!
             <p [innerHTML]='sb'></p> 
-          </h2>
-          <h2 *ngIf='.7 <= certainty && .8 > certainty'>  
-            Probably a {{prediction}}! 
-          </h2>
-          <h2 *ngIf='.5 < certainty && .7 > certainty'>
-            Looks like a {{prediction}}??
           </h2>
         </span>
         <h2 *ngIf='prediction != labels[0]'>
