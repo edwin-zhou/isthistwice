@@ -208,7 +208,33 @@ async function trainModel() {
     })
 }
 
-trainModel()
+/** evaluate model with dataset */
+async function evaluateModel(name) {
+    tf.loadLayersModel('file://./models/' + name + '/' + 'model.json')
+    .then(mod => {
+        mod.compile({
+            optimizer: tf.train.adam(0.00001),
+            loss: 'categoricalCrossentropy',
+            metrics: ['accuracy'],
+        })
+        mod.evaluateDataset(ds, {
+            batches: 25,
+        })
+        .then(val => {
+            val.forEach(t => {
+                t.print()
+            })
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    })
+    .catch(err => {
+        console.log(err)
+    })
+}
+
+evaluateModel('ot9-v2')
 
 module.exports = {ds}
 

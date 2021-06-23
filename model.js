@@ -75,6 +75,6 @@ model.compile({
     metrics: ['accuracy'],
 });
 
-model.summary()
+// model.summary()
 
 module.exports = {model, BATCH_SIZE, IMG_SIZE}
