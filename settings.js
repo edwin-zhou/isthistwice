@@ -6,7 +6,7 @@ var config = {
     IMG_SIZE: [300,300],
     IMG_PATH: 'images/processed',
     LABELS: ['Chaeyoung', 'Dahyun', 'Jeongyeon', 'Jihyo', 'Mina', 'Momo', 'Nayeon', 'Sana', 'Tzuyu'],
-    MODEL_NAME: 'ot9-v2'
+    MODEL_NAME: 'ot9'
 }
 
 module.exports = config

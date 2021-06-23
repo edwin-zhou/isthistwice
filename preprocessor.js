@@ -5,39 +5,40 @@ const path = require('path')
 const config = require('./settings')
 
 async function main() {
-    blazeface.load({
-        maxFaces: 1,
-        inputWidth: 128,
-        inputHeight: 128,
-    })
-    .then(model => {
-        // console.log(model)
-        config.LABELS.forEach((la, index) => {
-            let files = fs.readdirSync(path.join(__dirname, config.IMG_PATH, la))
-            files.slice(0).forEach(filename => {
-                let t = loadImage(la, filename)
-    
-                if (t.shape.length === 4) {
-                    let b = t.unstack()
-                    b.forEach((e,i) => {
-                        tf.tidy(() => {
-                            saveFace(model, e.pad(getPadding(e.shape)), la, filename+i.toString())
-                        })
-                    })
-                } else {
-                    saveFace(model, t.pad(getPadding(t.shape)), la ,filename)
-                }
-            })
+    tf.tidy(() => {
+        blazeface.load({
+            maxFaces: 1,
+            inputWidth: 128,
+            inputHeight: 128,
         })
-    })
-    .catch(err => {
-        console.log(err)
+        .then(model => {
+            // console.log(model)
+            // config.LABELS.forEach((la, index) => {
+                let files = fs.readdirSync(path.join(__dirname, 'images', 'super', "Tzuyu"))
+                files.slice(0).forEach(filename => {
+                    let t = loadImage("Tzuyu", filename)
+                    console.log(t)
+        
+                    if (t.shape.length === 4) {
+                        let b = t.unstack()
+                        b.forEach((e,i) => {
+                            saveFace(model, e.pad(getPadding(e.shape)), "Tzuyu", filename+i.toString())
+                        })
+                    } else {
+                        saveFace(model, t.pad(getPadding(t.shape)), "Tzuyu" ,filename)
+                    }
+                })
+            // })
+        })
+        .catch(err => {
+            console.log(err)
+        })
     })
 }
 
 /**takes images subfolder and array of filenames, returns tensor4d */
 function loadImage(dir, filename) {
-    let pa = path.join(__dirname, config.IMG_PATH, dir,  filename)
+    let pa = path.join(__dirname, 'images', 'super', dir,  filename)
 
     try {
         let buff = fs.readFileSync(pa)
@@ -119,4 +120,4 @@ function normalize(tensor) {
     return t
 }
 
-main()
+// main()

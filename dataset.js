@@ -49,7 +49,6 @@ function* data() {
         // console.log('shuffles: ' + shuffles)
         // console.log(numCalled)
         // console.log()
-
         for (let x=0;x<files.length;x++) {
             let s = pointers[x].next()
             if (!s.done) {
@@ -164,14 +163,17 @@ function shuffle(arr) {
 
 
 // ds.take(1).forEachAsync(e => {
-//     // tf.node.encodeJpeg(tf.tensor3d(arr), 'rgb')
-//     // .then(a => {
-//     //     fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
-//     // })
-//     // .catch(err => {
-//     //     console.log('niktram')
-//     // })
-//     // e.ys.print()
+//     let lab = e.ys.unstack()
+//     e.xs.unstack().forEach((arr, i) => {
+//         lab[i].print()        
+//         tf.node.encodeJpeg(arr, 'rgb')
+//         .then(a => {
+//             fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
+//         })
+//         .catch(err => {
+//             console.log('niktram')
+//         })
+//     })
 // })
 
 
@@ -234,7 +236,8 @@ async function evaluateModel(name) {
     })
 }
 
-evaluateModel('ot9-v2')
+// evaluateModel('ot9-v2')
+trainModel()
 
 module.exports = {ds}
 

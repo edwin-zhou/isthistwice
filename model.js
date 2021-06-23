@@ -1,15 +1,11 @@
 const tf = require('@tensorflow/tfjs-node');
 var config = require('./settings')
 
-const species = config.LABELS
-
 var model = tf.sequential()
-const BATCH_SIZE = config.BATCH_SIZE
-const IMG_SIZE = config.IMG_SIZE
 
 model.add(
     tf.layers.batchNormalization({
-        inputShape: IMG_SIZE.concat([3])
+        inputShape: config.IMG_SIZE.concat([3])
     })
 )
 
@@ -65,7 +61,7 @@ model.add(tf.layers.flatten());
 // }));
 
 model.add(tf.layers.dense({
-  units: species.length,
+  units: config.LABELS.length,
   activation: 'softmax'
 }));
 
@@ -77,4 +73,4 @@ model.compile({
 
 // model.summary()
 
-module.exports = {model, BATCH_SIZE, IMG_SIZE}
+module.exports = {model}
