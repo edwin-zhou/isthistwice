@@ -50,13 +50,13 @@
         </h3>
       </div>
       <div *ngIf='prediction != ""'>
-        <span *ngIf='prediction === labels[0]'>
+        <span *ngIf='prediction === labels[1]'>
           <h2>
             This is a {{prediction}}!
             <p [innerHTML]='sb'></p> 
           </h2>
         </span>
-        <h2 *ngIf='prediction != labels[0]'>
+        <h2 *ngIf='prediction != labels[1]'>
           This is a {{prediction}}
         </h2>
         <h3>
