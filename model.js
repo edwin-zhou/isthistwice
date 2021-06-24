@@ -18,18 +18,19 @@ model.add(
     })
 )
 
-model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
-
 model.add(
     tf.layers.conv2d({
         kernelSize: 5,
         padding: 'same',
         filters: 32,
+        strides: 2,
         activation: 'relu',
     })
 )
 
-model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
+model.add(
+    tf.layers.batchNormalization()
+)
 
 model.add(
     tf.layers.conv2d({
@@ -66,7 +67,7 @@ model.add(tf.layers.dense({
 }));
 
 model.compile({
-    optimizer: tf.train.adam(0.00001),
+    optimizer: tf.train.adam(0.000001),
     loss: 'categoricalCrossentropy',
     metrics: ['accuracy'],
 });

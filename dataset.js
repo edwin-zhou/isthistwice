@@ -8,12 +8,14 @@ var model = require('./model').model
 var config = require('./settings')
 
 var pointers = []
-var ds
 var validationSize = config.VALIDATION_SIZE
 var vxs = []
 var vys = []
 
-ds = tf.data.generator(data).map(e => {return augment(e)}).batch(config.BATCH_SIZE)
+var ds = tf.data.generator(data).map(e => {return augment(e)}).batch(config.BATCH_SIZE)
+// var validX = tf.data.array(vxs)
+// var validY = tf.data.array(vys)
+// var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
 
 var files = []
 var blaze
@@ -39,9 +41,7 @@ async function setup() {
     })
 }
 
-// var validX = tf.data.array(vxs)
-// var validY = tf.data.array(vys)
-// var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
+
 
 async function* data() {
     let numCalled = 0
@@ -74,8 +74,11 @@ async function* getSample(arr, speciesIndex) {
             let filePath = path.join(__dirname, config.IMG_PATH, config.LABELS[speciesIndex], arr[x])
                 let buff = fs.readFileSync(filePath)
                 let t = tf.node.decodeImage(buff, 3)
-                // t = tf.pad(t, getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)
                 if (t.shape.length === 3) {
+                    // use whole pic
+                    // yield tf.tidy(() => {return t.pad(getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)}) 
+
+                    // face only
                     let e = await getFace(blaze, t)
                     if (e) {
                         yield e
@@ -180,7 +183,7 @@ async function getFace(bl , t) {
     } 
 }
 
-async function trainModel() {
+async function trainModel(model) {
     model.fitDataset(ds, {
         epochs: config.EPOCHS,
         batchesPerEpoch: config.BATCHES_PER_EPOCH,
@@ -215,23 +218,18 @@ async function trainModel() {
 
 /** evaluate model with dataset */
 async function evaluateModel(name) {
-    tf.loadLayersModel('file://./models/' + name + '/' + 'model.json')
-    .then(mod => {
-        mod.compile({
-            optimizer: tf.train.adam(0.00001),
-            loss: 'categoricalCrossentropy',
-            metrics: ['accuracy'],
-        })
-        mod.evaluateDataset(ds, {
-            batches: 25,
-        })
-        .then(val => {
-            val.forEach(t => {
-                t.print()
-            })
-        })
-        .catch(err => {
-            console.log(err)
+    let mod = await loadModel('file://./models/' + name + '/' + 'model.json')
+    mod.compile({
+        optimizer: tf.train.adam(0.00001),
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy'],
+    })
+    mod.evaluateDataset(ds, {
+        batches: 25,
+    })
+    .then(val => {
+        val.forEach(t => {
+            t.print()
         })
     })
     .catch(err => {
@@ -239,8 +237,13 @@ async function evaluateModel(name) {
     })
 }
 
+async function loadModel(path) {
+    return tf.loadLayersModel(path)
+}
+
 setup()
 .then(() => {
+
     // ds.forEachAsync(e => {
         // let lab = e.ys.unstack()
         // e.xs.unstack().forEach((arr, i) => {
@@ -254,7 +257,15 @@ setup()
         //     })
         // })
     // })
-    trainModel()
+    tf.loadLayersModel('file://./models/' + config.MODEL_NAME + '/' + 'model.json')
+    .then(mod => {
+        mod.compile({
+            optimizer: tf.train.adam(0.00001),
+            loss: 'categoricalCrossentropy',
+            metrics: ['accuracy'],
+        })
+        trainModel(mod)
+    })
     // evaluateModel('ot9-v2')
 
 })
