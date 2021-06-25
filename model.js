@@ -36,23 +36,23 @@ model.add(
     tf.layers.conv2d({
         kernelSize: 3,
         padding: 'same',
-        filters: 64,
+        filters: 50,
         activation: 'relu',
     })
 )
 
-model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
+model.add(tf.layers.maxPooling2d({poolSize: 4}));
 
-model.add(
-    tf.layers.conv2d({
-        kernelSize: 2,
-        padding: 'same',
-        filters: 64,
-        activation: 'relu',
-    })
-)
+// model.add(
+//     tf.layers.conv2d({
+//         kernelSize: 2,
+//         padding: 'same',
+//         filters: 64,
+//         activation: 'relu',
+//     })
+// )
 
-model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
+// model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
   
 model.add(tf.layers.flatten());
 
@@ -67,7 +67,7 @@ model.add(tf.layers.dense({
 }));
 
 model.compile({
-    optimizer: tf.train.adam(0.000001),
+    optimizer: tf.train.adam(0.00001),
     loss: 'categoricalCrossentropy',
     metrics: ['accuracy'],
 });

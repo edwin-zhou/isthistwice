@@ -8,36 +8,44 @@ var model = require('./model').model
 var config = require('./settings')
 
 var pointers = []
-var validationSize = config.VALIDATION_SIZE
 var vxs = []
 var vys = []
+var validX = tf.data.array(vxs)
+var validY = tf.data.array(vys)
+var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
 
 var ds = tf.data.generator(data).map(e => {return augment(e)}).batch(config.BATCH_SIZE)
-// var validX = tf.data.array(vxs)
-// var validY = tf.data.array(vys)
-// var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
+
 
 var files = []
 var blaze
 
 async function setup() {
-    blaze = await blazeface.load({maxFaces:1})
+    // blaze = await blazeface.load({maxFaces:1})
     config.LABELS.forEach((name, i) => {
         let pa = path.join(__dirname, config.IMG_PATH, name)
-        let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
+        // let filenames = fs.readdirSync(pa).filter(file => {return path.extname(file) === '.jpg' || path.extname(file) === '.JPG'})
+        let filenames = fs.readdirSync(pa)
         shuffle(filenames)
-        files.push(filenames)
-        pointers.push(getSample(files[i],i))
 
-        let count = 0
-        // let s = getSample(filenames, i)
-        // for (let x=0;count<validationSize/2;x++) {
-        //     let e = s.next()
-        //     vxs.push(tf.tensor3d(e.value))
-        //     vys.push(tf.oneHot(i, species.length))
-        //     count++
-        // }
-        
+        let split = Math.min(filenames.length, 200) - config.VALIDATION_SIZE/config.LABELS.length
+
+        files.push(filenames.slice(0, split))
+
+        pointers.push(getSample(files[i],i))
+        let s = getSample(filenames.reverse(), i)
+        for (let x=0; x<config.VALIDATION_SIZE/config.LABELS.length ;x++) {
+            // console.log(vxs.length-(config.LABELS.length*(config.VALIDATION_SIZE*i)))
+            s.next()
+            .then(e => {
+                vxs.push(e.value)
+                vys.push(tf.oneHot(i, config.LABELS.length))
+            })
+            .catch(err => {
+                console.log(err)
+            })
+
+        }
     })
 }
 
@@ -76,13 +84,12 @@ async function* getSample(arr, speciesIndex) {
                 let t = tf.node.decodeImage(buff, 3)
                 if (t.shape.length === 3) {
                     // use whole pic
-                    // yield tf.tidy(() => {return t.pad(getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)}) 
-
+                    yield tf.tidy(() => {return t.pad(getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)}) 
                     // face only
-                    let e = await getFace(blaze, t)
-                    if (e) {
-                        yield e
-                    }
+                    // let e = await getFace(blaze, t)
+                    // if (e) {
+                    //     yield e
+                    // }
                 } else {
                     tf.dispose(t)
                 }
@@ -164,9 +171,9 @@ function shuffle(arr) {
 }
 
 async function getFace(bl , t) {
-    let b = tf.tidy(() => { return t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]) }) 
-
+    let b = tf.tidy(() => { return t.clone().pad(getPadding(t.shape)).resizeBilinear([128,128]) }) 
     val = await bl.estimateFaces(b, false)
+    console.log(val)
     if (val.length >= 1) {
         let tl = val[0].topLeft.map((e, i) => {return e/config.IMG_SIZE[0]}).reverse()
         let br = val[0].bottomRight.map((e, i) => {return e/config.IMG_SIZE[1]}).reverse()
@@ -187,8 +194,8 @@ async function trainModel(model) {
     model.fitDataset(ds, {
         epochs: config.EPOCHS,
         batchesPerEpoch: config.BATCHES_PER_EPOCH,
-        // validationData: validData,
-        // validationBatches: 2,
+        validationData: validData,
+        validationBatches: 1,
         callbacks: {
             onEpochEnd: () => {
                 model.save('file://./models/' + config.MODEL_NAME)
@@ -243,31 +250,33 @@ async function loadModel(path) {
 
 setup()
 .then(() => {
-
-    // ds.forEachAsync(e => {
-        // let lab = e.ys.unstack()
-        // e.xs.unstack().forEach((arr, i) => {
-        //     lab[i].print()        
-        //     tf.node.encodeJpeg(arr, 'rgb')
-        //     .then(a => {
-        //         fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
-        //     })
-        //     .catch(err => {
-        //         console.log('niktram')
-        //     })
-        // })
+    // validData.forEachAsync(e => {
+    //     let lab = e.ys.unstack()
+    //     e.xs.unstack().forEach((arr, i) => {
+    //         lab[i].print()        
+    //         tf.node.encodeJpeg(arr, 'rgb')
+    //         .then(a => {
+    //             fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
+    //         })
+    //         .catch(err => {
+    //             console.log('niktram')
+    //         })
+    //     })
     // })
-    tf.loadLayersModel('file://./models/' + config.MODEL_NAME + '/' + 'model.json')
-    .then(mod => {
-        mod.compile({
-            optimizer: tf.train.adam(0.00001),
-            loss: 'categoricalCrossentropy',
-            metrics: ['accuracy'],
-        })
-        trainModel(mod)
-    })
-    // evaluateModel('ot9-v2')
 
+    // tf.loadLayersModel('file://./models/' + config.MODEL_NAME + '/' + 'model.json')
+    // .then(mod => {
+    //     mod.compile({
+    //         optimizer: tf.train.adam(0.00001),
+    //         loss: 'categoricalCrossentropy',
+    //         metrics: ['accuracy'],
+    //     })
+    //     trainModel(mod)
+    // })
+
+    // evaluateModel('ot9-v2')
+    model.summary()
+    trainModel(model)
 })
 .catch(err => {
     console.log(err)
