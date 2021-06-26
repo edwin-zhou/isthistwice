@@ -13,53 +13,51 @@ model.add(
     tf.layers.conv2d({
         kernelSize: 7,
         padding: 'same',
-        filters: 16,
-        activation: 'relu',
+        filters: 8,
+        strides: 1,
+        activation: 'elu',
     })
 )
+
+model.add(tf.layers.maxPooling2d({poolSize: 2}));
 
 model.add(
     tf.layers.conv2d({
         kernelSize: 5,
         padding: 'same',
-        filters: 32,
+        filters: 16,
+        strides: 1,
+        activation: 'relu',
+    })
+)
+
+model.add(tf.layers.maxPooling2d({poolSize: 2}));
+
+model.add(
+    tf.layers.conv2d({
+        kernelSize: 4,
+        padding: 'same',
+        filters: 16,
         strides: 2,
         activation: 'relu',
     })
 )
 
-model.add(
-    tf.layers.batchNormalization()
-)
+model.add(tf.layers.maxPooling2d({poolSize: 2}));
 
 model.add(
     tf.layers.conv2d({
-        kernelSize: 3,
+        kernelSize: 2,
         padding: 'same',
-        filters: 50,
+        filters: 2,
+        strides: 2,
         activation: 'relu',
     })
 )
 
-model.add(tf.layers.maxPooling2d({poolSize: 4}));
+model.add(tf.layers.maxPooling2d({poolSize: 2}));
 
-// model.add(
-//     tf.layers.conv2d({
-//         kernelSize: 2,
-//         padding: 'same',
-//         filters: 64,
-//         activation: 'relu',
-//     })
-// )
-
-// model.add(tf.layers.maxPooling2d({poolSize: [2, 2], strides: [2, 2]}));
-  
 model.add(tf.layers.flatten());
-
-// model.add(tf.layers.dense({
-//     units: 10,
-//     activation: 'relu'
-// }));
 
 model.add(tf.layers.dense({
   units: config.LABELS.length,

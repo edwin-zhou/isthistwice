@@ -18,22 +18,25 @@ async function main() {
         })
         .then(blaze => {
             // console.log(model)
-            // config.LABELS.forEach((la, index) => {
-                let label = 'Nayeon'
+            config.LABELS.slice(5).forEach((label, index) => {
+                // let label = 'Nayeon'
                 let files = fs.readdirSync(path.join(__dirname, readir, label))
                 files.slice(0).forEach(filename => {
-                    let t = loadImage(readir + '/'+ label, filename)
+                    // let t = loadImage(readir, filename)
+                    let t = loadImage(readir+'/'+label, filename)
+
         
-                    if (t.shape.length === 3) {
+                    if (t.shape.length === 3 && Math.min(t.shape[0], t.shape[1]) >= config.IMG_SIZE[0]) {
                         // let b = t.unstack()
                         // b.forEach((e,i) => {
                         //     saveFace(model, e.pad(getPadding(e.shape)), "Tzuyu", filename+i.toString())
                         // })
                         saveFace(blaze, t, label, filename)
+                        // savePred(blaze, model, t, filename)
                     } else {
                     }
                 })
-            // })
+            })
         })
         .catch(err => {
             console.log(err)
@@ -63,70 +66,66 @@ function loadImage(dir, filename) {
 }
 
 async function saveFace(blaze, t, label, filename) {
-        blaze.estimateFaces(t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]), false)
-        .then(val => {
-            if (val[0]) {
-                // console.log(val[0])
-                let tl = val[0].topLeft.map((e, i) => {return e/256 }).reverse()
-                let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
-    
-                let tt = tf.tidy(() => { return tf.image.cropAndResize(tf.expandDims(t.pad(getPadding(t.shape))), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE, 'bilinear').unstack()[0] }) 
-    
-                tf.node.encodeJpeg(tt, 'rgb')
-                .then(a => {
-                    fs.writeFileSync(path.join(__dirname, writedir, label, filename), a)
-                })
-                .catch(err => {
-                    console.log(err)
-                })
-                .finally(() => {
-                    tf.dispose(t)
-                })   
-            }
-        })
-        .catch(err => {
-            console.log(err)
-        })
-}
-
-async function savePred(blaze, model, t, filename) {
-    blaze.estimateFaces(t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]), false)
+    let s = tf.tidy(() => { return t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]) })
+    blaze.estimateFaces(s, false)
     .then(val => {
         if (val[0]) {
             // console.log(val[0])
-            let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
+            let tl = val[0].topLeft.map((e, i) => {return e/256 }).reverse()
             let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
 
-            let tt = tf.image.cropAndResize(tf.expandDims(t), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()
+            let tt = tf.tidy(() => { return tf.image.cropAndResize(tf.expandDims(t.pad(getPadding(t.shape))), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE, 'bilinear').unstack()[0] }) 
 
-            let pred = model.predict(tt[0].expandDims(), {batchSize: 1}).arraySync()[0]
-
-            // pred.forEach((e, i) => {
-            //     if (e>=.20) {
-            //         tf.node.encodeJpeg(t, 'rgb')
-            //         .then(a => {
-            //             fs.writeFileSync(path.join(__dirname, writedir, config.LABELS[i], filename), a)
-            //         })
-            //         .catch(err => {
-            //             console.log(err)
-            //         })    
-            //     }
-            // })
-            // tf.dispose(t)
-
-            // write to highest prob
-            let name = config.LABELS[pred.indexOf(Math.max(...pred))]
-
-            tf.node.encodeJpeg(t, 'rgb')
+            tf.node.encodeJpeg(tt, 'rgb')
             .then(a => {
-                fs.writeFileSync(path.join(__dirname, writedir, name, filename), a)
+                fs.writeFileSync(path.join(__dirname, writedir, label, filename), a)
             })
             .catch(err => {
                 console.log(err)
             })
             .finally(() => {
                 tf.dispose(t)
+                tf.dispose(s)
             })   
+        }
+    })
+    .catch(err => {
+        console.log(err)
+    })
+}
+
+async function savePred(blaze, model, t, filename) {
+    let s = tf.tidy(() => { return t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]) })
+
+    blaze.estimateFaces(s, false)
+    .then(val => {
+        if (val[0]) {
+            // console.log(val[0])
+            let tl = val[0].topLeft.map((e, i) => {return e/256}).reverse()
+            let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
+
+            try {
+                let tt = tf.tidy(() => { return tf.image.cropAndResize(tf.expandDims(t.pad(getPadding(t.shape))), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE).unstack()[0]}) 
+
+                let pred = model.predict(tt.expandDims(), {batchSize: 1}).arraySync()[0]
+    
+                // write to highest prob
+                let name = config.LABELS[pred.indexOf(Math.max(...pred))]
+    
+                tf.node.encodeJpeg(t, 'rgb')
+                .then(a => {
+                    fs.writeFileSync(path.join(__dirname, writedir, name, filename), a)
+                })
+                .catch(err => {
+                    console.log(err)
+                })
+                .finally(() => {
+                    tf.dispose(t)
+                    tf.dispose(s)
+                    tf.dispose(pred)
+                })    
+            } catch (error) {
+            }
         }
     })
     .catch(err => {

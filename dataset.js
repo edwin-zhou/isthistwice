@@ -12,7 +12,7 @@ var vxs = []
 var vys = []
 var validX = tf.data.array(vxs)
 var validY = tf.data.array(vys)
-var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.BATCH_SIZE)
+var validData = tf.data.zip({xs: validX, ys: validY}).batch(config.VALIDATION_BATCH_SIZE)
 
 var ds = tf.data.generator(data).map(e => {return augment(e)}).batch(config.BATCH_SIZE)
 
@@ -28,7 +28,7 @@ async function setup() {
         let filenames = fs.readdirSync(pa)
         shuffle(filenames)
 
-        let split = Math.min(filenames.length, 200) - config.VALIDATION_SIZE/config.LABELS.length
+        let split = filenames.length - config.VALIDATION_SIZE/config.LABELS.length
 
         files.push(filenames.slice(0, split))
 
@@ -49,8 +49,6 @@ async function setup() {
     })
 }
 
-
-
 async function* data() {
     let numCalled = 0
     let shuffles = 0
@@ -65,12 +63,12 @@ async function* data() {
                 // numCalled++
                 yield {xs: s.value, ys: tf.oneHot(x, config.LABELS.length)}
             } else {
-                files.forEach((e, i) => {
-                    shuffle(e)
-                    pointers[i] = getSample(e, i)
-                })
-                shuffles++
-                break
+                shuffle(files[x])
+                pointers[x] = getSample(files[x], x)
+
+                s = await pointers[x].next()
+
+                yield {xs: s.value, ys: tf.oneHot(x, config.LABELS.length)}
             }
         }
     }
@@ -84,7 +82,9 @@ async function* getSample(arr, speciesIndex) {
                 let t = tf.node.decodeImage(buff, 3)
                 if (t.shape.length === 3) {
                     // use whole pic
-                    yield tf.tidy(() => {return t.pad(getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)}) 
+                    // yield tf.tidy(() => {return t.pad(getPadding(t.shape)).resizeBilinear(config.IMG_SIZE)}) 
+                    yield t
+
                     // face only
                     // let e = await getFace(blaze, t)
                     // if (e) {
@@ -195,7 +195,7 @@ async function trainModel(model) {
         epochs: config.EPOCHS,
         batchesPerEpoch: config.BATCHES_PER_EPOCH,
         validationData: validData,
-        validationBatches: 1,
+        validationBatches: 4,
         callbacks: {
             onEpochEnd: () => {
                 model.save('file://./models/' + config.MODEL_NAME)
@@ -250,7 +250,7 @@ async function loadModel(path) {
 
 setup()
 .then(() => {
-    // validData.forEachAsync(e => {
+    // ds.forEachAsync(e => {
     //     let lab = e.ys.unstack()
     //     e.xs.unstack().forEach((arr, i) => {
     //         lab[i].print()        
@@ -260,6 +260,9 @@ setup()
     //         })
     //         .catch(err => {
     //             console.log('niktram')
+    //         })
+    //         .finally(() => {
+    //             tf.dispose(e)
     //         })
     //     })
     // })
