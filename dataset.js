@@ -28,7 +28,8 @@ async function setup() {
         let filenames = fs.readdirSync(pa)
         shuffle(filenames)
 
-        let split = filenames.length - config.VALIDATION_SIZE/config.LABELS.length
+        let split = filenames.length - (config.VALIDATION_SIZE/config.LABELS.length)
+        console.log(split)
 
         files.push(filenames.slice(0, split))
 
@@ -63,6 +64,7 @@ async function* data() {
                 // numCalled++
                 yield {xs: s.value, ys: tf.oneHot(x, config.LABELS.length)}
             } else {
+                // console.log(`shuffle ${config.LABELS[x]}`)
                 shuffle(files[x])
                 pointers[x] = getSample(files[x], x)
 
@@ -71,6 +73,11 @@ async function* data() {
                 yield {xs: s.value, ys: tf.oneHot(x, config.LABELS.length)}
             }
         }
+        // console.log('super')
+        // files.forEach((e, i )=> {
+        //     shuffle(e)
+        //     pointers[i] = getSample(e, i)
+        // })
     }
 }
 
@@ -195,7 +202,7 @@ async function trainModel(model) {
         epochs: config.EPOCHS,
         batchesPerEpoch: config.BATCHES_PER_EPOCH,
         validationData: validData,
-        validationBatches: 4,
+        validationBatches: config.VALIDATION_SIZE/config.VALIDATION_BATCH_SIZE,
         callbacks: {
             onEpochEnd: () => {
                 model.save('file://./models/' + config.MODEL_NAME)
@@ -253,7 +260,7 @@ setup()
     // ds.forEachAsync(e => {
     //     let lab = e.ys.unstack()
     //     e.xs.unstack().forEach((arr, i) => {
-    //         lab[i].print()        
+    //         // lab[i].print()        
     //         tf.node.encodeJpeg(arr, 'rgb')
     //         .then(a => {
     //             fs.writeFileSync(path.join(__dirname, 'images', 'test', i.toString() + '.jpg'), a)
