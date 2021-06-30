@@ -1,2 +1,3 @@
 cd ./python/venv/Scripts/
-activate.bat
+activate.bat && cd.. && cd..
+

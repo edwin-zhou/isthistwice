@@ -6,7 +6,7 @@ var config = {
     VALIDATION_BATCH_SIZE: 9,
     IMG_SIZE: [256,256],
     IMG_PATH: 'images/processed',
-    LABELS: ['Tzuyu', 'Chaeyoung', 'Dahyun', 'Mina', 'Jihyo', 'Sana', 'Momo', 'Jeongyeon', 'Nayeon'],
+    LABELS: ['Tzuyu', 'Chaeyoung', 'Dahyun', 'Mina', 'Jihyo', 'Sana', 'Momo', 'Jeongyeon', 'Nayeon'].sort(),
     MODEL_NAME: 'ot9'
 }
 

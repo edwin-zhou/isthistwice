@@ -25,6 +25,7 @@ export class TfserviceService {
       res.json()
       .then(obj => {
         this.settings = obj
+        console.log(obj)
         this.loadModels()
         .then(() => {
           this._modelLoaded.next(true)
@@ -70,7 +71,7 @@ export class TfserviceService {
 
   /** returns face */
   async cropImage(tensor: Tensor3D): Promise<Tensor3D> {
-    let t = tensor.resizeBilinear([256,256])
+    let t = tf.tidy(() => { return tensor.clone().resizeBilinear([256,256]) }) 
     let arr = await this.blaze.estimateFaces(t as Tensor3D, false)
     
     let tl: number[] = (arr[0].topLeft as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
