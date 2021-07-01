@@ -45,7 +45,7 @@ export class TfserviceService {
 
   async loadModels() {
     this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
-    // this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
+    this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
     console.log(`loaded ${this.settings.MODEL_NAME}`)
   }
 
@@ -56,11 +56,24 @@ export class TfserviceService {
   /** makes prediction over 1 image */
   async predict(image: HTMLImageElement): Promise<tf.Tensor> {
     let i = this.loadImage(image)
-    // let face = await this.cropImage(i)
-    let pred: tf.Tensor = tf.tidy(() => { return this.model.predict(i.resizeBilinear([400,400]).expandDims(), {batchSize: 1}) as tf.Tensor}) 
-    return pred
-    // let pred: tf.Tensor | tf.Tensor[] = this.model.predict(tensor.expandDims(), {batchSize: 1})
-    // return pred as tf.Tensor
+    let face = await this.cropImage(i) as Tensor3D
+
+    if (!face) {
+      let arr: number[] = new Array(this.settings.LABELS.length).fill(0, 0, this.settings.LABELS.length)
+      let p = tf.tensor2d([arr])
+      return p
+    }
+
+    // whole pic
+    // let pred: tf.Tensor = tf.tidy(() => { return this.model.predict(i.resizeBilinear([400,400]).expandDims(), {batchSize: 1}) as tf.Tensor}) 
+    // return pred
+
+    // face only
+    let pred: tf.Tensor | tf.Tensor[] = this.model.predict(face.expandDims() , {batchSize: 1})
+    tf.dispose(i)
+    tf.dispose(face)
+    
+    return pred as tf.Tensor
   }
 
   /** convert htmlimage to tensor */
@@ -70,10 +83,14 @@ export class TfserviceService {
   }
 
   /** returns face */
-  async cropImage(tensor: Tensor3D): Promise<Tensor3D> {
+  async cropImage(tensor: Tensor3D): Promise<Tensor3D|void> {
     let t = tf.tidy(() => { return tensor.clone().resizeBilinear([256,256]) }) 
     let arr = await this.blaze.estimateFaces(t as Tensor3D, false)
-    
+
+    if (!arr.length) {
+      return
+    }
+
     let tl: number[] = (arr[0].topLeft as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
     let br: number[] = (arr[0].bottomRight as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
 

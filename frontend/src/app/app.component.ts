@@ -12,11 +12,12 @@ import { Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   sb: string = '&#127827'
 
-  title = 'frontend';
+  title = 'leappdepwinss';
   picBuff: any
   certainty: number = -1
   prediction: string = ''
   labels: string[] = []
+  stats: number[] = []
 
   imageURL: string = ''
 
@@ -81,9 +82,9 @@ export class AppComponent implements OnInit, OnDestroy {
       let t = await this.TfService.predict(pic)
 
       let pred: number[][] = t.arraySync() as number[][]
-      console.log(pred[0])
+      this.stats = pred[0]
       this.certainty = Math.max(...pred[0])
-      this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
+      this.prediction = this.certainty===0? "" : this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
     }
     // else if (this.imageURL != '') {
 

@@ -1,12 +1,15 @@
-<mat-toolbar style="top: 0; position: sticky; z-index: 1000;" color='accent' [class.mat-elevation-z5]='true'>
-  <span>My Application</span>
-</mat-toolbar>
 
-<mat-grid-list cols="4" rowHeight="200px">
+
+<mat-grid-list cols="4" rowHeight="1vh">
+  <mat-grid-tile colspan='4' rowspan='5'>
+    <mat-toolbar style="top: 0; position: sticky; z-index: 1000;" color='accent' [class.mat-elevation-z5]='true'>
+      <img src="../favicon.ico" alt="">
+    </mat-toolbar>
+  </mat-grid-tile>
   <form [formGroup]="form" (ngSubmit)='onSubmit()'>
     <mat-grid-tile
       colspan='3'
-      rowspan='3'
+      rowspan='75'
       style="background: rgb(203, 250, 203);">
 
       <mat-spinner *ngIf='!modelLoaded'></mat-spinner>
@@ -37,39 +40,58 @@
 
     <mat-grid-tile
       colspan='1'
-      rowspan='3'
-      style="background: lightblue">
-      <div *ngIf='prediction === ""'>
+      rowspan='75'
+      style="background: lightblue;">
+      <span *ngIf='certainty === -1'>
         <h1>
-          Detects chae
+          Detects OT9!
         </h1>
         <h3>
           upload an image
           <br>
           <mat-icon>keyboard_backspace</mat-icon>
         </h3>
-      </div>
-      <div *ngIf='prediction != ""'>
+      </span>
+      <div *ngIf='prediction != ""' style="width: 95%;">
+        <!-- chae -->
         <span *ngIf='prediction === labels[0]'>
           <h2>
             This is a {{prediction}}!
             <p [innerHTML]='sb'></p> 
           </h2>
         </span>
+        <!-- twice -->
         <h2 *ngIf='prediction != labels[0]'>
           This is a {{prediction}}
         </h2>
+        <!-- certainty -->
         <h3>
-          {{certainty | percent}}
+          ({{certainty | percent}})
         </h3>
+        <br>
+        <!-- stats -->
+        <div>
+          <div *ngFor='let per of stats; let i = index'> 
+            <p matTooltip="{{per|percent}}">{{labels[i]}}</p> <mat-progress-bar  mode='determinate' [value]='per*100'></mat-progress-bar>
+            <br>
+          </div>
+        </div>
       </div>
+      <div *ngIf='prediction === ""'>
+        <!-- no face -->
+        <h2 *ngIf='certainty === 0'>
+          No face detected
+        </h2>
+      </div>
+
+
     </mat-grid-tile>
     
     <mat-grid-tile
       colspan='4'
-      rowspan='1'
+      rowspan='15'
       style="background: lightgreen">
-      <button mat-raised-button mat-ripple color='primary' (onClick)='onSubmit()' [disabled]='predicting'>
+      <button mat-raised-button mat-ripple color='accent' (onClick)='onSubmit()' [disabled]='predicting'>
         Submit
       </button>
       <mat-spinner *ngIf='predicting'></mat-spinner>
