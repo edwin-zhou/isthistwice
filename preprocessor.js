@@ -5,8 +5,8 @@ const path = require('path')
 const config = require('./settings')
 
 
-var readir = 'images/sorted/_stash'
-var writedir = 'images/sorted/_stash'
+var readir = 'C:/sorted/_stash'
+var writedir = 'images/processed'
 
 async function main() {
     let model = await tf.loadLayersModel('file://./models/' + config.MODEL_NAME + '/model.json')
@@ -46,13 +46,24 @@ async function main() {
         //     }
 
         // })
-        let f = fs.readdirSync(path.join(__dirname, 'images', 'sorted', '_stash', 'smurf'))
+        let f = fs.readdirSync(readir)
+        // for (let x=0;x<f.length;x++) {
+        //     // console.log(`${x} / ${f.length}  ${f[x]}`)
+        //     await doomz(path.join(__dirname, 'images', 'sorted', '_stash', 'smurf', f[x]), blaze)
+        // }
+
         for (let x=0;x<f.length;x++) {
-            // console.log(`${x} / ${f.length}  ${f[x]}`)
-            await doomz(path.join(__dirname, 'images', 'sorted', '_stash', 'smurf', f[x]), blaze)
+            filenames = fs.readdirSync(path.join(readir, f[x]))
+
+            for (let y=3000;y<5000;y++) {
+                let t = loadImage(readir +"/"+ f[x], filenames[y])
+
+                if (t) {
+                    await saveFace(blaze, t, f[x], filenames[y])
+                }
+            }
+
         }
-        // f.slice(0,300).forEach(e => {
-        // })
 }
 
 var count = 0
@@ -103,13 +114,19 @@ async function doomz(pa, blaze) {
 
 /**takes images subfolder and array of filenames, returns tensor4d */
 function loadImage(dir, filename) {
-    let pa = path.join(__dirname, dir, filename)
+    let pa = path.join(dir, filename)
 
     try {
         let buff = fs.readFileSync(pa)
 
         let t = tf.node.decodeImage(buff, 3)
-        return t
+        
+        if (t.shape.length === 3) {
+            return t
+        } else {
+            return null
+        }
+
         // tf.node.encodeJpeg(tt, 'rgb')
         // .then(a => {
         //     fs.writeFileSync(path.join(__dirname, 'images', 'resized', filename + '.jpg'), a)
@@ -122,39 +139,37 @@ function loadImage(dir, filename) {
     }
 }
 
-async function saveFace(blaze, t, label, pa) {
+async function saveFace(blaze, t, label, filename) {
     let s = tf.tidy(() => { return t.clone().pad(getPadding(t.shape)).resizeBilinear([256,256]) })
     blaze.estimateFaces(s, false)
     .then(val => {
-        if (val.length != 1) {
-            fs.unlinkSync(pa)
-            // console.log(`del ${pa}`)
-        } else if (val.length === 1) {
+        // if (val.length != 1) {
+        //     fs.unlinkSync(pa)
+        //     // console.log(`del ${pa}`)
+        // } else if (val.length === 1) {
 
-        } else {
-            console.log('wtrf')
-        }
-        tf.dispose(s)
-        tf.dispose(t)
-        // if (val[0]) {
-        //     // console.log(val[0])
-        //     let tl = val[0].topLeft.map((e, i) => {return e/256 }).reverse()
-        //     let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
-
-        //     let tt = tf.tidy(() => { return tf.image.cropAndResize(tf.expandDims(t.pad(getPadding(t.shape))), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE, 'bilinear').unstack()[0] }) 
-
-        //     tf.node.encodeJpeg(tt, 'rgb')
-        //     .then(a => {
-        //         fs.writeFileSync(path.join(__dirname, writedir, label, filename), a)
-        //     })
-        //     .catch(err => {
-        //         console.log(err)
-        //     })
-        //     .finally(() => {
-        //         tf.dispose(t)
-        //         tf.dispose(s)
-        //     })   
+        // } else {
+        //     console.log('wtrf')
         // }
+        if (val[0] && val.length === 1) {
+            // console.log(val[0])
+            let tl = val[0].topLeft.map((e, i) => {return e/256 }).reverse()
+            let br = val[0].bottomRight.map((e, i) => {return e/256}).reverse()
+
+            let tt = tf.tidy(() => { return tf.image.cropAndResize(tf.expandDims(t.pad(getPadding(t.shape))), tf.tensor2d([tl.concat(br)]), [0], config.IMG_SIZE, 'bilinear').unstack()[0] }) 
+
+            tf.node.encodeJpeg(tt, 'rgb')
+            .then(a => {
+                fs.writeFileSync(path.join(__dirname, writedir, label, filename), a)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .finally(() => {
+                tf.dispose(t)
+                tf.dispose(s)
+            })   
+        }
     })
     .catch(err => {
         tf.dispose(s)

@@ -45,7 +45,7 @@ export class TfserviceService {
 
   async loadModels() {
     this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
-    this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
+    // this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
     console.log(`loaded ${this.settings.MODEL_NAME}`)
   }
 
@@ -56,8 +56,8 @@ export class TfserviceService {
   /** makes prediction over 1 image */
   async predict(image: HTMLImageElement): Promise<tf.Tensor> {
     let i = this.loadImage(image)
-    let face = await this.cropImage(i)
-    let pred: tf.Tensor = this.model.predict(face.expandDims(), {batchSize: 1}) as tf.Tensor
+    // let face = await this.cropImage(i)
+    let pred: tf.Tensor = tf.tidy(() => { return this.model.predict(i.resizeBilinear([400,400]).expandDims(), {batchSize: 1}) as tf.Tensor}) 
     return pred
     // let pred: tf.Tensor | tf.Tensor[] = this.model.predict(tensor.expandDims(), {batchSize: 1})
     // return pred as tf.Tensor
