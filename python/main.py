@@ -4,13 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import model as M
-import inception_v4 as v4
 
 # model: tf.keras.Sequential = v4.create_model(num_classes=9)
 
-# model: tf.keras.Sequential = M.model
+model: tf.keras.Sequential = M.model
 
-model: tf.keras.Sequential = tf.keras.models.load_model("../models/ot9/keras/model.h5")
+# model: tf.keras.Sequential = tf.keras.models.load_model("../models/ot9/keras/model.h5")
 # model.load_weights("../models/ot9/keras/weights.h5")
 # model.compile(optimizer='Adam', loss=tf.keras.losses.categorical_crossentropy, metrics=tf.keras.metrics.categorical_accuracy)
 
@@ -57,7 +56,6 @@ val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 # plot()
-# model.load_weights("../models/lite/keras/weights.h5")
 history = model.fit(
     x=train_ds,
     epochs=100,
@@ -87,8 +85,9 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.show()
 
 # tfjs.converters.save_keras_model(model, "../models/ot9")
+
 model.save("../models/ot9/keras/model.h5", include_optimizer=False)
-model.save_weights("../models/ot9/keras/weights.h5")
+# model.save_weights("../models/ot9/keras/weights.h5")
 
 
 

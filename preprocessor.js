@@ -52,10 +52,10 @@ async function main() {
         //     await doomz(path.join(__dirname, 'images', 'sorted', '_stash', 'smurf', f[x]), blaze)
         // }
 
-        for (let x=0;x<f.length;x++) {
+        for (let x=4;x<f.length;x++) {
             filenames = fs.readdirSync(path.join(readir, f[x]))
 
-            for (let y=3000;y<5000;y++) {
+            for (let y=5000;y<8000;y++) {
                 let t = loadImage(readir +"/"+ f[x], filenames[y])
 
                 if (t) {

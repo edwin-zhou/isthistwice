@@ -36,9 +36,7 @@ model = tf.keras.Sequential([
     #     # kernel_initializer=tf.keras.initializers.VarianceScaling(scale=0.1, mode='fan_in', distribution='uniform')
 
     # ),
-    # tf.keras.layers.MaxPool2D(
-    #     pool_size=4
-    # ),
+
     #     tf.keras.layers.Conv2D(
     #     filters=265,
     #     kernel_size=3,
@@ -49,13 +47,16 @@ model = tf.keras.Sequential([
     # ),
     tf.keras.layers.Conv2D(
         filters=64,
-        kernel_size=2,
+        kernel_size=3,
         strides=1,
         activation=tf.keras.activations.relu,
         # kernel_initializer=tf.keras.initializers.VarianceScaling(scale=0.1, mode='fan_in', distribution='uniform')
     ),
+    tf.keras.layers.MaxPool2D(
+        pool_size=3
+    ),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(units=64 ,activation=tf.keras.activations.relu),
+    tf.keras.layers.Dense(units=50 ,activation=tf.keras.activations.relu),
     # tf.keras.layers.Dense(units=1024,activation=tf.keras.activations.relu),
     tf.keras.layers.Dense(
         units=9,
