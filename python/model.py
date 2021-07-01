@@ -65,7 +65,7 @@ model = tf.keras.Sequential([
     )
 ])
 model.compile(
-    optimizer=tf.optimizers.Adam(1e-4),
+    optimizer=tf.optimizers.Adam(1e-5),
     loss=tf.keras.losses.categorical_crossentropy,
     metrics=[tf.keras.metrics.categorical_accuracy]
 )
