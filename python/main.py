@@ -4,14 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import model as M
+import sys
 
 # model: tf.keras.Sequential = v4.create_model(num_classes=9)
 
-# model: tf.keras.Sequential = M.model
+model: tf.keras.Sequential = M.model
 
-model: tf.keras.Sequential = tf.keras.models.load_model("../models/ot9/keras/model.h5")
-# model.load_weights("../models/ot9/keras/weights.h5")
-# model.compile(optimizer=tf.optimizers.Adam(5e-6), loss=tf.keras.losses.categorical_crossentropy, metrics=tf.keras.metrics.categorical_accuracy)
+model: tf.keras.Sequential = tf.keras.models.load_model("../models/test1/keras/model.h5")
+model.compile(optimizer=tf.optimizers.Adam(1e-5), loss=tf.keras.losses.categorical_crossentropy, metrics=tf.keras.metrics.categorical_accuracy)
 
 def augment(t, label):
     r = tf.random.uniform((), 0, 4, tf.int32)
@@ -19,8 +19,34 @@ def augment(t, label):
     t = tf.image.rot90(t, r)
     return (t, label)
 
-def plot():
-    for e, l in train_ds.take(1):
+train_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    directory='D:/node-app/isthischae/images/processed',
+    labels="inferred",
+    label_mode="categorical",
+    image_size=(256,256),
+    # smart_resize=True,
+    # batch_size=32,
+    # shuffle=True,
+    seed=529056,
+    validation_split=0.1,
+    subset="training"
+).prefetch(tf.data.AUTOTUNE).shuffle(64, reshuffle_each_iteration=True).map(augment)
+
+val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    directory='D:/node-app/isthischae/images/processed',
+    labels="inferred",
+    label_mode="categorical",
+    image_size=(256,256),
+    # smart_resize=True,
+    # batch_size=15,
+    # shuffle=True,
+    seed=529056,
+    validation_split=0.1,
+    subset="validation"
+)
+
+def plot(dset: tf.data.Dataset=train_ds, num=1):
+    for e, l in dset.take(num):
         plt.figure(figsize=(10, 10))
         for i in range(len(e)):
             ax = plt.subplot(math.ceil(math.sqrt(len(e))),math.ceil(math.sqrt(len(e))),i+1)
@@ -29,16 +55,16 @@ def plot():
             plt.axis("off")
         plt.show()
 
-def train():
-    # history = model.fit(
-    #     x=train_ds,
-    #     epochs=50,
-    #     verbose=1,
-    #     validation_data=val_ds,
-    #     callbacks= [
-    #         tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.005, patience=3, mode="auto", restore_best_weights=True)
-    #     ]
-    # )
+def train(m: tf.keras.Sequential = model):
+    history = m.fit(
+        x=train_ds,
+        epochs=10,
+        verbose=1,
+        validation_data=val_ds,
+        callbacks= [
+            tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.002, patience=3, mode="auto", restore_best_weights=True)
+        ]
+    )
     # summarize history for accuracy
     print(history.history)
     plt.plot(history.history['categorical_accuracy'])
@@ -58,38 +84,17 @@ def train():
     plt.show()
     return
 
-train_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
-    directory='D:/node-app/isthischae/images/processed',
-    labels="inferred",
-    label_mode="categorical",
-    image_size=(256,256),
-    smart_resize=True,
-    batch_size=32,
-    shuffle=True,
-    seed=529056,
-    validation_split=0.1,
-    subset="training"
-).prefetch(tf.data.AUTOTUNE).map(augment)
+def pr(t: tf.Tensor, l):
+    print(l.shape)
+    return (t, l)
 
-val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
-    directory='D:/node-app/isthischae/images/processed',
-    labels="inferred",
-    label_mode="categorical",
-    image_size=(256,256),
-    smart_resize=True,
-    batch_size=15,
-    shuffle=True,
-    seed=529056,
-    validation_split=0.1,
-    subset="validation"
-)
+# plot(train_ds, 2)
+print(model._get_compile_args())
+train(model)
 
-# plot()
+# tfjs.converters.save_keras_model(model, "../models/ot9")
 
-tfjs.converters.save_keras_model(model, "../models/ot9")
-
-# model.save("../models/ot9/keras/model.h5", include_optimizer=False)
-# model.save_weights("../models/ot9/keras/weights.h5")
+model.save("../models/test1/keras/model.h5", include_optimizer=False)
 
 
 
