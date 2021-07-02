@@ -90,11 +90,11 @@ def pr(t: tf.Tensor, l):
 
 # plot(train_ds, 2)
 print(model._get_compile_args())
-train(model)
+# train(model)
 
-# tfjs.converters.save_keras_model(model, "../models/ot9")
+tfjs.converters.save_keras_model(model, "../models/ot9")
 
-model.save("../models/test1/keras/model.h5", include_optimizer=False)
+# model.save("../models/test1/keras/model.h5", include_optimizer=False)
 
 
 
