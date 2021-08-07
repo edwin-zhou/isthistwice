@@ -1,4 +1,6 @@
 import tensorflow as tf
+import numpy as np
+import statistics
 
 model = tf.keras.Sequential([
     tf.keras.layers.BatchNormalization(input_shape=(256,256,3)),
@@ -76,3 +78,15 @@ model.compile(
     loss=tf.keras.losses.categorical_crossentropy,
     metrics=[tf.keras.metrics.categorical_accuracy]
 )
+
+def checkWeights(mod: tf.keras.Sequential):
+    for layer in mod.layers:
+        print(type(layer));
+        w = np.array(layer.get_weights());
+        print(w);
+        # print("ay");
+        # print(np.mean(w));
+        # print(np.std(w));
+        # print();
+
+

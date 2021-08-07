@@ -6,11 +6,10 @@ import math
 import model as M
 import sys
 
-# model: tf.keras.Sequential = v4.create_model(num_classes=9)
 
-model: tf.keras.Sequential = M.model
+dir = "test1"
 
-model: tf.keras.Sequential = tf.keras.models.load_model("../models/test1/keras/model.h5")
+model: tf.keras.Sequential = tf.keras.models.load_model("../models/" +  dir + "/keras/model.h5")
 model.compile(optimizer=tf.optimizers.Adam(1e-5), loss=tf.keras.losses.categorical_crossentropy, metrics=tf.keras.metrics.categorical_accuracy)
 
 def augment(t, label):
@@ -27,10 +26,10 @@ train_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
     # smart_resize=True,
     # batch_size=32,
     # shuffle=True,
-    seed=529056,
+    seed=5293056,
     validation_split=0.1,
     subset="training"
-).prefetch(tf.data.AUTOTUNE).shuffle(64, reshuffle_each_iteration=True).map(augment)
+).shuffle(32, reshuffle_each_iteration=True).map(augment)
 
 val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
     directory='D:/node-app/isthischae/images/processed',
@@ -40,7 +39,7 @@ val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
     # smart_resize=True,
     # batch_size=15,
     # shuffle=True,
-    seed=529056,
+    seed=5293056,
     validation_split=0.1,
     subset="validation"
 )
@@ -55,14 +54,15 @@ def plot(dset: tf.data.Dataset=train_ds, num=1):
             plt.axis("off")
         plt.show()
 
-def train(m: tf.keras.Sequential = model):
+def train(m: tf.keras.Sequential = model, epochs: int = 10):
     history = m.fit(
         x=train_ds,
-        epochs=10,
+        epochs=epochs,
         verbose=1,
         validation_data=val_ds,
         callbacks= [
-            tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.002, patience=3, mode="auto", restore_best_weights=True)
+            tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.002, patience=3, mode="auto", restore_best_weights=True),
+            tf.keras.callbacks.TensorBoard(log_dir="../models/" + dir + "/logs", histogram_freq=1)
         ]
     )
     # summarize history for accuracy
@@ -84,15 +84,9 @@ def train(m: tf.keras.Sequential = model):
     plt.show()
     return
 
-def pr(t: tf.Tensor, l):
-    print(l.shape)
-    return (t, l)
+train(model, 5)
 
-# plot(train_ds, 2)
-print(model._get_compile_args())
-# train(model)
-
-tfjs.converters.save_keras_model(model, "../models/ot9")
+tfjs.converters.save_keras_model(model, "../models/test1")
 
 # model.save("../models/test1/keras/model.h5", include_optimizer=False)
 
