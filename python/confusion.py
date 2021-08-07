@@ -10,7 +10,7 @@ import settings as s
 from model import model as model
 import data as d
 
-file_writer_cm = tf.summary.create_file_writer("../models/" + s.dir + 'logs/cm')
+file_writer_cm = tf.summary.create_file_writer("../models/" + s.dir + '/logs/cm')
 
 def plot_to_image(figure):
   #     Converts the matplotlib plot specified by 'figure' to a PNG image and
@@ -30,7 +30,7 @@ def plot_to_image(figure):
   return image
 
 def plot_confusion_matrix(cm, class_names):
-  figure = plt.figure(figsize=(9, 9))
+  figure = plt.figure(figsize=(20, 20))
   plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
   plt.title("Confusion matrix")
   plt.colorbar()
@@ -61,7 +61,7 @@ def log_confusion_matrix(epoch, logs):
   ds_labels = np.array([99], int)
   for images, labels in d.val_ds.take(-1).as_numpy_iterator():
       for label in labels:
-          l: int = np.array([np.argmax(label)])
+          l = np.array([np.argmax(label)])
           ds_labels = np.concatenate((ds_labels, l), axis=0)
   ds_labels = np.delete(ds_labels, [0])
 
