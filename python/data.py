@@ -20,7 +20,8 @@ train_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
     seed=5293056,
     validation_split=0.1,
     subset="training"
-).shuffle(32, reshuffle_each_iteration=True).map(augment)
+)
+# .shuffle(32, reshuffle_each_iteration=True).map(augment)
 
 val_ds: tf.data.Dataset = tf.keras.preprocessing.image_dataset_from_directory(
     directory='D:/node-app/isthischae/images/processed',

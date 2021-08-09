@@ -53,18 +53,26 @@ def plot_confusion_matrix(cm, class_names):
   return figure
 
 def log_confusion_matrix(epoch, logs):
-      # Use the model to predict the values from the validation dataset.
-  test_pred_raw = model.predict(d.val_ds)
-  test_pred = np.argmax(test_pred_raw, axis=1)
+      
+  # # Use the model to predict the values from the validation dataset.
+  # test_pred_raw = model.predict(d.val_ds, steps=None)
+  # test_pred = np.argmax(test_pred_raw, axis=1)
 
+  # # get labels
+  # labels_raw = y = np.concatenate([y for x, y in d.val_ds.take(-1)], axis=0)
+  # print(len(labels_raw))
+  # ds_labels = np.argmax(labels_raw, axis=1)
+
+  test_pred = []
+  ds_labels = []
+
+  for images, labels in d.val_ds.as_numpy_iterator():
+    test_pred.append(np.argmax(model.predict(images), axis=1))
+    ds_labels.append(np.argmax((labels), axis=1))
+  test_pred = [pred for l in test_pred for pred in l]
+  ds_labels = [label for l in ds_labels for label in l]
+        
   # Calculate the confusion matrix.
-  ds_labels = np.array([99], int)
-  for images, labels in d.val_ds.take(-1).as_numpy_iterator():
-      for label in labels:
-          l = np.array([np.argmax(label)])
-          ds_labels = np.concatenate((ds_labels, l), axis=0)
-  ds_labels = np.delete(ds_labels, [0])
-
   cm = confusion_matrix(ds_labels, test_pred)
   # Log the confusion matrix as an image summary.
   figure = plot_confusion_matrix(cm, class_names=s.class_names)
@@ -76,3 +84,5 @@ def log_confusion_matrix(epoch, logs):
 
 # Define the per-epoch callback.
 cm_callback = tf.keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
+
+log_confusion_matrix(0, "alal")

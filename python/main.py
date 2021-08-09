@@ -20,18 +20,7 @@ def plot(dset: tf.data.Dataset=d.train_ds, num=1):
             plt.axis("off")
         plt.show()
 
-def train(m: tf.keras.Sequential = model, epochs: int = 10):
-    history = m.fit(
-        x=d.train_ds,
-        epochs=epochs,
-        verbose=1,
-        validation_data=d.val_ds,
-        callbacks= [
-            tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.002, patience=3, mode="auto", restore_best_weights=True),
-            tf.keras.callbacks.TensorBoard(log_dir="../models/" + s.dir + "/logs", histogram_freq=1),
-            c.cm_callback
-        ]
-    )
+def printHistory(history):
     # summarize history for accuracy
     print(history.history)
     plt.plot(history.history['categorical_accuracy'])
@@ -49,9 +38,20 @@ def train(m: tf.keras.Sequential = model, epochs: int = 10):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    return
 
-train(model, 1)
+def train(m: tf.keras.Sequential = model, epochs: int = 10):
+    history = m.fit(
+        x=d.train_ds,
+        epochs=epochs,
+        verbose=1,
+        validation_data=d.val_ds,
+        callbacks= [
+            tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.002, patience=3, mode="auto", restore_best_weights=True),
+            tf.keras.callbacks.TensorBoard(log_dir="../models/" + s.dir + "/logs", histogram_freq=1),
+            c.cm_callback
+        ]
+    )
+    return history
 
 # tfjs.converters.save_keras_model(model, "../models/test1")
 # model.save("../models/test1/keras/model.h5", include_optimizer=False)
