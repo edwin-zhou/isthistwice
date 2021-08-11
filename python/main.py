@@ -53,8 +53,10 @@ def train(m: tf.keras.Sequential = model, epochs: int = 10):
     )
     return history
 
-# tfjs.converters.save_keras_model(model, "../models/test1")
-# model.save("../models/test1/keras/model.h5", include_optimizer=False)
+train(model, 20)
+
+tfjs.converters.save_keras_model(model, "../models/test1")
+model.save("../models/test1/keras/model.h5", include_optimizer=False)
 
 
 

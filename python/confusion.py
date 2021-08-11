@@ -85,4 +85,4 @@ def log_confusion_matrix(epoch, logs):
 # Define the per-epoch callback.
 cm_callback = tf.keras.callbacks.LambdaCallback(on_epoch_end=log_confusion_matrix)
 
-log_confusion_matrix(0, "alal")
+# log_confusion_matrix(0, "alal")
