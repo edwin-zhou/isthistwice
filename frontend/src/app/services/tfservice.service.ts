@@ -46,7 +46,7 @@ export class TfserviceService {
 
   async loadModels() {
     // this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
-    this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
+    this.blaze = await blazeface.load({maxFaces:this.settings.LABELS.length, inputHeight: 128, inputWidth: 128})
   }
 
   async loadPred(t: tf.Tensor): Promise<any> {
