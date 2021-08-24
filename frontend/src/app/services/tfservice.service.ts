@@ -49,7 +49,7 @@ export class TfserviceService {
     this.blaze = await blazeface.load({maxFaces:this.settings.LABELS.length, inputHeight: 128, inputWidth: 128})
   }
 
-  async loadPred(t: tf.Tensor): Promise<any> {
+  async loadPred(t: tf.Tensor4D): Promise<any> {
     return this.http.post(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME, {
       image: t.arraySync()
     }).toPromise()
@@ -64,29 +64,22 @@ export class TfserviceService {
   }
 
   /** makes prediction over 1 image */
-  async predict(image: HTMLImageElement): Promise<number[][]> {
+  async predict(image: HTMLImageElement): Promise<{bbox: number[][], pred: number[][]}> {
     let i = this.loadImage(image)
-    let face = await this.cropImage(i) as Tensor3D
+    let faces: {t: tf.Tensor4D, bbox: number[][]} | void = await this.cropImage(i) 
 
-    if (!face) {
+    if (!faces) {
       let arr: number[] = new Array(this.settings.LABELS.length).fill(0, 0, this.settings.LABELS.length)
-      let p = tf.tensor2d([arr])
       tf.dispose(i)
-      tf.dispose(face)
-      return [arr]
+      tf.dispose(faces)
+      return {bbox: [arr], pred: [arr]} 
     }
 
-    // whole pic
-    // let pred: tf.Tensor = tf.tidy(() => { return this.model.predict(i.resizeBilinear([400,400]).expandDims(), {batchSize: 1}) as tf.Tensor}) 
-    let pred: number[][] = await this.loadPred(face)
+    let pred: number[][] = await this.loadPred(faces.t)
 
-    // face only
-    // let pred: tf.Tensor | tf.Tensor[] = this.model.predict(face.expandDims() , {batchSize: 1})
-    
     tf.dispose(i)
-    tf.dispose(face)
-    
-    return pred 
+    tf.dispose(faces)
+    return {bbox: faces.bbox, pred: pred} 
   }
 
   /** convert htmlimage to tensor */
@@ -96,20 +89,28 @@ export class TfserviceService {
   }
 
   /** returns face */
-  async cropImage(tensor: Tensor3D): Promise<Tensor3D|void> {
+  async cropImage(tensor: Tensor3D): Promise<{t: tf.Tensor4D, bbox: number[][]}|void> {
     let t = tf.tidy(() => { return tensor.clone().resizeBilinear([256,256]) }) 
-    let arr = await this.blaze.estimateFaces(t as Tensor3D, false)
+    let bboxes = await this.blaze.estimateFaces(t as Tensor3D, false)
 
-    if (!arr.length) {
+    if (!bboxes.length) {
       return
     }
 
-    let tl: number[] = (arr[0].topLeft as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
-    let br: number[] = (arr[0].bottomRight as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
-
-    return tf.tidy(() => {
-      return tf.image.cropAndResize(tensor.expandDims() as any, tf.tensor2d([tl.concat(br)]), [0], this.settings.IMG_SIZE).unstack()[0] as Tensor3D
+    let faces: number[][] = []
+    bboxes.forEach(face => {
+      let tl: number[] = (face.topLeft as [number, number]).map((e: number, i: number) => {return e/256}).reverse()
+      let br: number[] = (face.bottomRight as [number, number]).map((e: number, i: number) => {return e/256}).reverse() 
+      faces.push(tl.concat(br))
     })
+
+    return {
+      t: tf.tidy(() => {
+        return tf.image.cropAndResize(tensor.expandDims() as any, tf.tensor2d(faces), new Array(faces.length).fill(0), this.settings.IMG_SIZE)
+        // return tf.image.cropAndResize(tensor.expandDims() as any, tf.tensor2d([face.tl.concat(face.br)]), [0], this.settings.IMG_SIZE).unstack()[0] as Tensor3D
+      }),
+      bbox: faces
+    } 
   }
 
   getPadding(shape: any): [number,number][] {

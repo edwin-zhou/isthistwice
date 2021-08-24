@@ -25,16 +25,14 @@ app.use(rateLimit({
 	max: 2, // limit each IP to 2 requests per windowMs
 }))
 
-app.use(express.json({limit: '5mb'}))
+app.use(express.json({limit: '50mb'}))
 app.use(express.urlencoded({extended: true}))
 
 // app.use('/models', express.static(__dirname + '/models'))
 app.post('/models/:modelname', (req, res, next) => {
     if (req.params.modelname == config.MODEL_NAME  && req.body.image) {
-        let t = tf.tidy(() => { return tf.tensor3d(req.body.image, [256,256,3]).expandDims() }) 
-        let p = tf.tidy(() => {return model.predict(t).arraySync()}) 
+        let p = tf.tidy(() => {return model.predict(tf.tensor4d(req.body.image, [req.body.image.length, 256, 256, 3])).arraySync()}) 
         res.status(200).send({pred: p})
-        tf.dispose(t)
         tf.dispose(p)
     }
 })
