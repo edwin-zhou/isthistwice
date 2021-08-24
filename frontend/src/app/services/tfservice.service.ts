@@ -4,12 +4,13 @@ import * as tf from '@tensorflow/tfjs'
 import * as blazeface from '@tensorflow-models/blazeface'
 import { Tensor3D } from '@tensorflow/tfjs';
 import { BehaviorSubject } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TfserviceService {
-  model!: tf.LayersModel
+  // model!: tf.LayersModel
   blaze!: blazeface.BlazeFaceModel
 
   settings: {
@@ -19,7 +20,7 @@ export class TfserviceService {
   private _modelLoaded: BehaviorSubject<boolean> = new BehaviorSubject(false as boolean)
   modelLoaded = this._modelLoaded.asObservable()
 
-  constructor() { 
+  constructor(private http: HttpClient) { 
     fetch(environment.mainURL + '/settings')
     .then(res => {
       res.json()
@@ -44,9 +45,18 @@ export class TfserviceService {
   }
 
   async loadModels() {
-    this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
-    this.blaze = await blazeface.load({maxFaces:1, inputHeight: 128, inputWidth: 128})
-    console.log(`loaded ${this.settings.MODEL_NAME}`)
+    // this.model = await tf.loadLayersModel(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME + '/model.json')
+    this.blaze = await blazeface.load({maxFaces:this.settings.LABELS.length, inputHeight: 128, inputWidth: 128})
+  }
+
+  async loadPred(t: tf.Tensor): Promise<any> {
+    return this.http.post(environment.mainURL + '/models' + '/' + this.settings.MODEL_NAME, {
+      image: t.arraySync()
+    }).toPromise()
+    .then((val: any) => {
+      return val.pred
+    })
+    .catch(err => console.log(err))
   }
 
   bufftoarr(tensor: Tensor3D) {
@@ -54,26 +64,29 @@ export class TfserviceService {
   }
 
   /** makes prediction over 1 image */
-  async predict(image: HTMLImageElement): Promise<tf.Tensor> {
+  async predict(image: HTMLImageElement): Promise<number[][]> {
     let i = this.loadImage(image)
     let face = await this.cropImage(i) as Tensor3D
 
     if (!face) {
       let arr: number[] = new Array(this.settings.LABELS.length).fill(0, 0, this.settings.LABELS.length)
       let p = tf.tensor2d([arr])
-      return p
+      tf.dispose(i)
+      tf.dispose(face)
+      return [arr]
     }
 
     // whole pic
     // let pred: tf.Tensor = tf.tidy(() => { return this.model.predict(i.resizeBilinear([400,400]).expandDims(), {batchSize: 1}) as tf.Tensor}) 
-    // return pred
+    let pred: number[][] = await this.loadPred(face)
 
     // face only
-    let pred: tf.Tensor | tf.Tensor[] = this.model.predict(face.expandDims() , {batchSize: 1})
+    // let pred: tf.Tensor | tf.Tensor[] = this.model.predict(face.expandDims() , {batchSize: 1})
+    
     tf.dispose(i)
     tf.dispose(face)
     
-    return pred as tf.Tensor
+    return pred 
   }
 
   /** convert htmlimage to tensor */
