@@ -79,12 +79,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.predicting = true
     if (this.picBuff) {
       let pic: HTMLImageElement = document.getElementById('subject') as HTMLImageElement
-      let t = await this.TfService.predict(pic)
-
-      let pred: number[][] = t.arraySync() as number[][]
+      let pred = await this.TfService.predict(pic)
       this.stats = pred[0]
-      this.certainty = Math.max(...pred[0])
-      this.prediction = this.certainty===0? "" : this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
+      this.certainty = Math.max(...this.stats)
+      this.prediction = this.certainty===0? "" : this.TfService.settings.LABELS[this.stats.indexOf(this.certainty)]
     }
     // else if (this.imageURL != '') {
 
