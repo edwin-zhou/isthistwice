@@ -2,7 +2,7 @@ import { Tensor3D } from '@tensorflow/tfjs';
 import { TfserviceService } from './services/tfservice.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, NgControl, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Observable, Observer, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -12,8 +12,9 @@ import { Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   sb: string = '&#127827'
 
-  title = 'leappdepwinss';
+  title = 'leappdepwinss'
   picBuff: any
+  results: {bbox: number[][], pred: number[][]} = {bbox: [], pred: []}
   certainty: number = -1
   prediction: string = ''
   labels: string[] = []
@@ -68,6 +69,44 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onUrlChange(event: any) {
     this.imageURL = this.form.get('url')?.value
+    this.getBase64ImageFromURL(this.imageURL).subscribe((base64data: any) => {    
+      // this is the image as dataUrl
+      let base64Image = 'data:image/jpg;base64,' + base64data;
+    });
+  }
+  
+  getBase64ImageFromURL(url: string) {
+    return Observable.create((observer: Observer<string>) => {
+      // create an image object
+      let img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.src = url;
+      if (!img.complete) {
+          // This will call another method that will create image from url
+          img.onload = () => {
+          observer.next(this.getBase64Image(img));
+          observer.complete();
+        };
+        img.onerror = (err) => {
+           observer.error(err);
+        };
+      } else {
+          observer.next(this.getBase64Image(img));
+          observer.complete();
+      }
+    });
+  }
+  getBase64Image(img: HTMLImageElement) {
+    // We create a HTML canvas object that will create a 2d image
+    var canvas: HTMLCanvasElement = document.getElementById('canv') as HTMLCanvasElement
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext("2d");
+    // This will draw image    
+    ctx!.drawImage(img, 0, 0);
+    // Convert the drawn image to Data URL
+    var dataURL = canvas.toDataURL("image/png");
+    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
   }
   
   deletePic() {
@@ -79,20 +118,17 @@ export class AppComponent implements OnInit, OnDestroy {
     this.predicting = true
     if (this.picBuff) {
       let pic: HTMLImageElement = document.getElementById('subject') as HTMLImageElement
-      let pred = await this.TfService.predict(pic)
-      this.stats = pred.pred[0]
+      this.results = await this.TfService.predict(pic)
+      this.stats = this.results.pred[0]
       this.certainty = Math.max(...this.stats)
       this.prediction = this.certainty===0? "" : this.TfService.settings.LABELS[this.stats.indexOf(this.certainty)]
     }
-    // else if (this.imageURL != '') {
-
-    //   let pic = document.getElementById('urlsubject')
-    //   let t = this.TfService.loadImage(pic)
-    //   let pred: number[][] = this.TfService.predict(t).arraySync() as number[][]
-
-    //   this.certainty = Math.max(...pred[0])
-    //   this.prediction = this.TfService.settings.LABELS[pred[0].indexOf(this.certainty)]
-    // }
+    else if (this.imageURL != '') {
+      this.results = await this.TfService.predict(document.getElementById('canv') as HTMLImageElement)
+      this.stats = this.results.pred[0]
+      this.certainty = Math.max(...this.stats)
+      this.prediction = this.certainty===0? "" : this.TfService.settings.LABELS[this.stats.indexOf(this.certainty)]
+    }
     this.predicting = false
   }
 

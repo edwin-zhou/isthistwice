@@ -63,6 +63,10 @@ export class TfserviceService {
     return tf.browser.toPixels(tensor)
   }
 
+  fromPixels(image: HTMLImageElement): tf.Tensor3D {
+    return tf.browser.fromPixels(image)
+  }
+
   /** makes prediction over 1 image */
   async predict(image: HTMLImageElement): Promise<{bbox: number[][], pred: number[][]}> {
     let i = this.loadImage(image)

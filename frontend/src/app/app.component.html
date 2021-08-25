@@ -16,10 +16,10 @@
 
       <div *ngIf='!picBuff && imageURL === "" && modelLoaded' class="dropzone"> 
         <input *ngIf='!picBuff' type="file" formControlName='pic' (change)='onFileChange($event)'>
-        <!-- <span>OR</span>
+        <span>OR</span>
         <mat-form-field appearance='fill' style="width: 90%;">
           <input matInput *ngIf='!picBuff' type="url" formControlName='url' (change)='onUrlChange($event)' placeholder="paste image url">
-        </mat-form-field> -->
+        </mat-form-field>
       </div>
 
       <div *ngIf='picBuff && modelLoaded' >
@@ -30,7 +30,9 @@
       </div>
 
       <div *ngIf='imageURL != "" && modelLoaded' >
-        <img id='urlsubject' [src]="imageURL" class="upload" crossorigin='anonymous'>
+        <canvas id="canv" class="upload" >
+          <img id='urlsubject' [src]="imageURL" class="upload" crossorigin='anonymous'>
+        </canvas>
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>
