@@ -22,10 +22,14 @@
         </mat-form-field>
       </div>
 
-      <div [hidden]='imageURL === "" || !modelLoaded' >
+      <div id="img-container" [hidden]='imageURL === "" || !modelLoaded' >
+        <app-image></app-image>
         <canvas id="canv" class="upload" >
-          <img id='urlsubject' [src]="imageURL" class="upload" crossorigin='anonymous'>
+          <img id='urlsubject' [src]="imageURL" crossorigin='anonymous'>
         </canvas>
+        <div *ngFor='let box of results.bbox' class="overlay">
+          {{ box }}
+        </div>
         <button mat-fab mat-ripple style="z-index: 3; position: absolute; top: 2%; right: 1%;" type="button" (click)='deletePic()'>
           <mat-icon>close</mat-icon>
         </button>

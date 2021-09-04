@@ -47,10 +47,12 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { http } from '@tensorflow/tfjs-core/dist/io/http';
+import { ImageComponent } from './image/image/image.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    ImageComponent,
   ],
   imports: [
     BrowserModule,
@@ -93,7 +95,7 @@ import { http } from '@tensorflow/tfjs-core/dist/io/http';
     MatTooltipModule,
     MatPaginatorModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule 
   ],
   exports: [
     MatAutocompleteModule,
@@ -130,7 +132,7 @@ import { http } from '@tensorflow/tfjs-core/dist/io/http';
     MatTooltipModule,
     MatPaginatorModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

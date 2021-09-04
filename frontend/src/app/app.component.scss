@@ -1,4 +1,19 @@
- .dropzone {
+.img-container {
+    position: relative;
+}
+
+.overlay {
+    color: white;
+    background-color: rgba(0,0,0,0.8);
+    padding: 10px;
+    border-radius: 10%;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 5;
+}
+
+.dropzone {
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -12,6 +27,7 @@
 }
 
 .upload {
+    display: block;
     margin: 5 auto;
     padding: auto;
     object-fit:scale-down;

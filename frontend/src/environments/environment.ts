@@ -5,9 +5,12 @@
 export const environment = {
   production: false,
   mainURL: 'http://localhost:3000',
-
   modelURL: "http://localhost:3000/models/ot9/model.json",
 
+
+  LABELS: ['Tzuyu', 'Chaeyoung', 'Dahyun', 'Mina', 'Jihyo', 'Sana', 'Momo', 'Jeongyeon', 'Nayeon'],
+  colors: ["Blue", "Red", "White", "Mint", "Apricot", "Purple", "Pink", "Yellow-Green", "Sky-Blue"],
+  colorsRGB: ["#0000ff", "#ff0000", "#FFFFFF", "#3EB489", "#FBCEB1", "#800080", "#FFC0CB", "#9acd32", "#87CEEB"]
 };
 
 /*

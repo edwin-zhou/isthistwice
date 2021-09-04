@@ -1,3 +1,4 @@
+import { environment } from 'src/environments/environment';
 import { TfserviceService } from './services/tfservice.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, NgControl, Validators } from '@angular/forms';
@@ -8,8 +9,11 @@ import { Observable, Observer, Subscription } from 'rxjs';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
+
 export class AppComponent implements OnInit, OnDestroy {
   sb: string = '&#127827'
+
+
 
   title = 'leappdepwinss'
   results: {bbox: number[][], pred: number[][]} = {bbox: [], pred: []}
@@ -120,13 +124,16 @@ export class AppComponent implements OnInit, OnDestroy {
     let ctx = canvas.getContext("2d");
     let d: number = Math.abs(canvas.width-canvas.height)
 
-    bboxes.forEach((bbox: number[]) => {
+    bboxes.forEach((bbox: number[], index) => {
       let xTL: number = (canvas.width>canvas.height)? bbox[1]*canvas.width : bbox[1]*(canvas.width+d) - d/2 
       let yTL: number = (canvas.width>canvas.height)? bbox[0]*(canvas.height+d) - d/2 : bbox[0]*canvas.height
       let c: number = (canvas.width>canvas.height)? Math.abs(bbox[1]-bbox[3]) * canvas.width : Math.abs(bbox[0]-bbox[2]) * canvas.height
-      
+
+      let p =  environment.colorsRGB[this.results.pred[index].indexOf(Math.max(...this.results.pred[index]))]
       ctx!.beginPath();
       ctx!.rect(xTL, yTL, c, c);
+      ctx!.strokeStyle = p
+      ctx!.lineWidth = 15
       ctx!.stroke();
     })
 
