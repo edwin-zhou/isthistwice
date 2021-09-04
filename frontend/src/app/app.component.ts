@@ -13,8 +13,6 @@ import { Observable, Observer, Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   sb: string = '&#127827'
 
-
-
   title = 'leappdepwinss'
   results: {bbox: number[][], pred: number[][]} = {bbox: [], pred: []}
   certainty: number = -1

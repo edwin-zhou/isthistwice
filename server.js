@@ -22,7 +22,7 @@ app.use((req,res,next) => {
 
 app.use(rateLimit({
 	windowMs: 1000, // 1 second
-	max: 2, // limit each IP to 2 requests per windowMs
+	max: 7, // limit each IP to 2 requests per windowMs
 }))
 
 app.use(express.json({limit: '50mb'}))
